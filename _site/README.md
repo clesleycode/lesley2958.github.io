@@ -1,4 +1,6 @@
-##[点我查看中文说明](https://github.com/dubuyuye/blog/blob/gh-pages/README_zh_CN.md)
+This site has been modified to the blog at lesley2958.github.io
+
+Original: 
 
 # Blog Address
 
@@ -24,11 +26,3 @@ In your swiftype engine, go to `Setup and integration` -> `Install Search`, you 
   _st('install','swiftype_searchId','2.0.0');
 </script>
 ```
-
-## 2.disqus
-
-This service provides the comment function.
-
-Service address： <https://disqus.com/>.
-
-After the setup is complete， you need to modify the `disqus_shortname` in `_config.yml`.
