@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    
+    <url>
+        <loc>http://blog.rainyalley.com/2014-02-08/linux-power/</loc>
+        <lastmod>2015-11-08T22:20:49-05:00</lastmod>
+        <changefreq>weekly</changefreq>
+    </url>
+    
+    
+    <url>
+        <loc>http://blog.rainyalley.com/archive/</loc>
+        <lastmod>2015-11-08T22:20:49-05:00</lastmod>
+        <changefreq>weekly</changefreq>
+    </url>
+    
+    
+    <url>
+        <loc>http://blog.rainyalley.com/category/</loc>
+        <lastmod>2015-11-08T22:20:49-05:00</lastmod>
+        <changefreq>weekly</changefreq>
+    </url>
+    
+    
+    <url>
+        <loc>http://blog.rainyalley.com/tags/</loc>
+        <lastmod>2015-11-08T22:20:49-05:00</lastmod>
+        <changefreq>weekly</changefreq>
+    </url>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</urlset>
