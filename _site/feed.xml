@@ -5,9 +5,89 @@
     <description>That Comp Sci Girl</description>
     <link>http://lesley2958.github.io/</link>
     <atom:link href="http://lesley2958.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 09 Nov 2015 04:01:48 -0500</pubDate>
-    <lastBuildDate>Mon, 09 Nov 2015 04:01:48 -0500</lastBuildDate>
+    <pubDate>Mon, 09 Nov 2015 15:10:08 -0500</pubDate>
+    <lastBuildDate>Mon, 09 Nov 2015 15:10:08 -0500</lastBuildDate>
     <generator>Jekyll v3.0.0</generator>
+    
+      <item>
+        <title>Intro to Databases</title>
+        <description>&lt;h3&gt; Part 1: NoSQL vs SQL&lt;/h3&gt;
+
+&lt;p&gt;&lt;b&gt; NoSQL: &lt;/b&gt; 
+&lt;li&gt; &lt;q&gt;Not only&lt;/q&gt; SQL
+&lt;li&gt; stores data in more than just tabular relations&lt;/p&gt;
+
+&lt;p&gt;Types of NoSQL databases:
+&lt;li&gt; Document Oriented (Mongo!)
+&lt;li&gt; Key Value
+&lt;li&gt; Graph
+&lt;li&gt; Column Oriented&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt; SQL: &lt;/b&gt;
+&lt;li&gt; Strictly relational&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt; Part 2: MongoDB &lt;/h3&gt;
+
+&lt;p&gt;&lt;b&gt; Why Mongo? &lt;/b&gt;
+&lt;li&gt; Flexible!
+&lt;li&gt; Speed - efficient indexing/storage techniques
+&lt;li&gt; Scalability
+&lt;li&gt; Querying&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt; Space: &lt;/b&gt;&lt;/p&gt;
+
+&lt;p&gt;Because Mongo dynamically allocates and de-allocates RAM, it can be run on a small amount of RAM. 
+&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;-&amp;gt; Stores data in BSON structure, which is stored in a collection.&lt;br&gt;
+-&amp;gt; Great &lt;a href=&quot;http://mongodb.com&quot;&gt;Documentation&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt;Mongo Shell:&lt;/b&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 08 Nov 2015 00:00:00 -0500</pubDate>
+        <link>http://lesley2958.github.io/2015-11-08/databases/</link>
+        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/databases/</guid>
+        
+        <category>databases</category>
+        
+        <category>mongoDB</category>
+        
+        
+        <category>databases</category>
+        
+      </item>
+    
+      <item>
+        <title>Memoization</title>
+        <description>&lt;h4&gt; Memoization &lt;/h4&gt;
+</description>
+        <pubDate>Sun, 08 Nov 2015 00:00:00 -0500</pubDate>
+        <link>http://lesley2958.github.io/2015-11-08/memoization/</link>
+        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/memoization/</guid>
+        
+        <category>Algorithms</category>
+        
+        
+        <category>Memoization</category>
+        
+      </item>
+    
+      <item>
+        <title>CYK Algorithm</title>
+        <description>&lt;h4&gt; CYK Algorithm &lt;/h4&gt;
+</description>
+        <pubDate>Sun, 08 Nov 2015 00:00:00 -0500</pubDate>
+        <link>http://lesley2958.github.io/2015-11-08/cyk-algorithm/</link>
+        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/cyk-algorithm/</guid>
+        
+        <category>Algorithms</category>
+        
+        
+        <category>Algorithms</category>
+        
+      </item>
     
       <item>
         <title>Dynamic Programming</title>
@@ -15,18 +95,16 @@
 
 &lt;p&gt;Top Down vs Bottom Up&lt;/p&gt;
 </description>
-        <pubDate>Sat, 08 Feb 2014 00:00:00 -0500</pubDate>
-        <link>http://lesley2958.github.io/2014-02-08/linux-power/</link>
-        <guid isPermaLink="true">http://lesley2958.github.io/2014-02-08/linux-power/</guid>
+        <pubDate>Sat, 07 Nov 2015 00:00:00 -0500</pubDate>
+        <link>http://lesley2958.github.io/2015-11-07/dynamic-programming/</link>
+        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-07/dynamic-programming/</guid>
+        
+        <category>DynamicProgramming</category>
+        
         
         <category>Dynamic</category>
         
         <category>Programming</category>
-        
-        
-        <category>Dynamic</category>
-        
-        <category>Programmin</category>
         
       </item>
     

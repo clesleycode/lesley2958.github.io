@@ -1,8 +1,8 @@
 ---
 layout: post
 title: Dynamic Programming
-tags: Dynamic Programming
-categories: Dynamic Programmin
+tags: DynamicProgramming
+categories: Dynamic Programming
 ---
 
 
