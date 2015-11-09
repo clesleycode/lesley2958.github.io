@@ -29,16 +29,16 @@ baseurl: ""
 
 
 title: "TL;DR"
-email: "dubuyuye@yeah.net"
-description: "Developer"
-github_username:  "dubuyuye"
+email: "lc2958@columbia.edu"
+description: "That Comp Sci Girl"
+github_username:  "lesley2958"
 swiftype_searchId: "ncwR9a8S9CTx2q9SgsJm"
 disqus_shortname: "rainyalley"
 gems: [jekyll-paginate]
 
 
-url: "http://blog.rainyalley.com"
-imgrepo: "http://blog.rainyalley.com/static/img"
+url: "http://lesley2958.github.io"
+imgrepo: "http://lesley2958.github.io/static/img"
 #url: "http://127.0.0.1:4000"
 #imgrepo: "http://127.0.0.1:4000/static/img"
 

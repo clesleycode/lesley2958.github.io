@@ -5,29 +5,29 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
     
     <url>
-        <loc>http://blog.rainyalley.com/2014-02-08/linux-power/</loc>
-        <lastmod>2015-11-08T22:38:47-05:00</lastmod>
+        <loc>http://lesley2958.github.io/2014-02-08/linux-power/</loc>
+        <lastmod>2015-11-09T02:13:31-05:00</lastmod>
         <changefreq>weekly</changefreq>
     </url>
     
     
     <url>
-        <loc>http://blog.rainyalley.com/archive/</loc>
-        <lastmod>2015-11-08T22:38:47-05:00</lastmod>
+        <loc>http://lesley2958.github.io/archive/</loc>
+        <lastmod>2015-11-09T02:13:31-05:00</lastmod>
         <changefreq>weekly</changefreq>
     </url>
     
     
     <url>
-        <loc>http://blog.rainyalley.com/category/</loc>
-        <lastmod>2015-11-08T22:38:47-05:00</lastmod>
+        <loc>http://lesley2958.github.io/category/</loc>
+        <lastmod>2015-11-09T02:13:31-05:00</lastmod>
         <changefreq>weekly</changefreq>
     </url>
     
     
     <url>
-        <loc>http://blog.rainyalley.com/tags/</loc>
-        <lastmod>2015-11-08T22:38:47-05:00</lastmod>
+        <loc>http://lesley2958.github.io/tags/</loc>
+        <lastmod>2015-11-09T02:13:31-05:00</lastmod>
         <changefreq>weekly</changefreq>
     </url>
     
