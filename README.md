@@ -1,4 +1,4 @@
-##[点我查看中文说明](https://github.com/dubuyuye/blog/blob/gh-pages/README_zh_CN.md)
+TL;DR was made based off of the following: 
 
 # Blog Address
 
