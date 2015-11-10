@@ -2,8 +2,14 @@
 layout: post
 title: Intro to Databases
 tags: databases mongoDB
-categories: databases
+categories: Databases
 ---
+<h3> Introduction: </h3>
+
+Before delving into the details of different database technologies, it's important that we go over the very definition of what a database even is. 
+
+Without even knowing it, you use databases all the time. For every search, ____, or ____, you're likely engaging with a database - you just don't know it because web developers have hid it behind some fancy user interface. 
+
 <h3> Part 1: NoSQL vs SQL</h3>
 
 <b> NoSQL: </b> 

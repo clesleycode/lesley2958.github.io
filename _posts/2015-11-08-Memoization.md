@@ -2,7 +2,7 @@
 layout: post
 title: Memoization
 tags: Algorithms
-categories: Memoization
+categories: Algorithms
 ---
 
 
