@@ -1,8 +1,8 @@
 ---
 layout: post
-title: Dynamic Programming
-tags: DynamicProgramming
-categories: Dynamic Programming
+title: "Dynamic Programming"
+tags: Algorithms
+categories: Algorithms
 ---
 
 
