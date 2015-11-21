@@ -4,13 +4,19 @@ title: Intro to Databases
 tags: databases mongoDB
 categories: Databases
 ---
-<h3> Introduction: </h3>
+<h3> An Introduction to Databases: </h3>
 
-Before delving into the details of different database technologies, it's important that we go over the very definition of what a database even is. 
+Before delving into the details of different database technologies, let's begin by going over the very definition of what a database even is. 
 
-Without even knowing it, you use databases all the time. For every search, ____, or ____, you're likely engaging with a database - you just don't know it because web developers have hid it behind some fancy user interface. 
+<h4> What is a database? </h4>
 
-<h3> Part 1: NoSQL vs SQL</h3>
+A database is structured set of data - this data can include numbers, text, or any other representation of meaningful information. 
+
+<h4> Why are databases important? </h4>
+
+Without even knowing it, you use databases all the time. For every Google search or Facebook profile view, you're engaging with a database - the details are just hidden behind a user interface. Databases make the lives of developers easier by providing them with a structured and uniform set of data that they can then use to manipulate in anyway. 
+
+<h4> NoSQL vs SQL: </h4>
 
 <b> NoSQL: </b> 
 <li> "Not only" SQL
@@ -26,7 +32,7 @@ Types of NoSQL databases:
 <li> Strictly relational
 
 ------------------------------
-<h3> Part 2: MongoDB </h3>
+<h4> MongoDB </h4>
 
 <b> Why Mongo? </b>
 <li> Flexible!
