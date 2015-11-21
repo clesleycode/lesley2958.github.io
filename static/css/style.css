@@ -81,7 +81,7 @@ layout: null
 }
 
 .footnote .foot-item:hover{
-    background-color: #2ca6cb;
+    background-color: #551A8B;
     -webkit-transition: background .4s ease-in-out;
     -moz-transition: background .4s ease-in-out;
     -ms-transition: background .4s ease-in-out;
