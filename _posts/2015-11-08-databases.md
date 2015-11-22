@@ -16,23 +16,23 @@ A database is structured set of data - this data can include numbers, text, or a
 
 Without even knowing it, you use databases all the time. For every Google search or Facebook profile view, you're engaging with a database - the details are just hidden behind a user interface. Databases make the lives of developers easier by providing them with a structured and uniform set of data that they can then use to manipulate in anyway. 
 
-<h3> NoSQL vs SQL: </h3>
+<h3> What is SQL? </h3>
 
-<b> NoSQL: </b> 
-<li> "Not only" SQL
-<li> stores data in more than just tabular relations
+SQL is the standard computer language for relational database management. An important property of SQL is <b>RDBMS</b>, Relational Database Management System, which means it stores its data in tables of columns and rows.   
 
-Types of NoSQL databases:
+<h3> What is NoSQL? </h3>
+
+NoSQL, or "not only" SQL, stores data in more ways than just the traditional tabular relations. 
+
+<h3> What are some types of NoSQL? </h3>
 <li> Document Oriented (Mongo!)
 <li> Key Value
 <li> Graph
 <li> Column Oriented
 
-<b> SQL: </b>
-<li> Strictly relational
-
 ------------------------------
-<h3> MongoDB </h3>
+
+<h3> What is MongoDB? </h3>
 
 <b> Why Mongo? </b>
 <li> Flexible!
