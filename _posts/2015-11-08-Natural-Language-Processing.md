@@ -32,6 +32,10 @@ Language is inheritantly ambiguous. Once person's interpretation of a sentence m
 
 <h3> Regular Expressions: </h3>
 
+The simplest form of a regular expression is a sequence of characters contained within <b>two backslashes</b>. For example, <i>python</i> would be <i>/python/</i>. 
+
+Regular Expressions are <b>case sensitive</b>, which means <i>/p/</i> is distinguishable from <i>/P/</i> and <i>/python/</i> is distinguishable from <i>/Python/</i>. If you want a regular expression to represent both <i>python</i> and <i>Python</i>, you can use <b>brackets</b> to represent the disjunction. For example, <i>/[Pp]ython/</i> could represent <i>python</i> or <i>Python</i>.
+
 ``` bash
 $ pip install re
 ```
