@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Intro to Databases
-tags: databases mongoDB
+tags: databases
 categories: Databases
 ---
 <h2> An Introduction to Databases: </h2>
