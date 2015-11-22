@@ -1,6 +1,4 @@
-This site has been modified to the blog at lesley2958.github.io
-
-Original: 
+TL;DR was made based off of the following: 
 
 # Blog Address
 
@@ -26,3 +24,11 @@ In your swiftype engine, go to `Setup and integration` -> `Install Search`, you 
   _st('install','swiftype_searchId','2.0.0');
 </script>
 ```
+
+## 2.disqus
+
+This service provides the comment function.
+
+Service address： <https://disqus.com/>.
+
+After the setup is complete， you need to modify the `disqus_shortname` in `_config.yml`.

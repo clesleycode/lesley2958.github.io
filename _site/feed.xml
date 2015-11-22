@@ -5,13 +5,25 @@
     <description>That Comp Sci Girl</description>
     <link>http://lesley2958.github.io/</link>
     <atom:link href="http://lesley2958.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 09 Nov 2015 18:31:51 -0500</pubDate>
-    <lastBuildDate>Mon, 09 Nov 2015 18:31:51 -0500</lastBuildDate>
+    <pubDate>Sat, 21 Nov 2015 19:00:07 -0500</pubDate>
+    <lastBuildDate>Sat, 21 Nov 2015 19:00:07 -0500</lastBuildDate>
     <generator>Jekyll v3.0.0</generator>
     
       <item>
         <title>Intro to Databases</title>
-        <description>&lt;h3&gt; Part 1: NoSQL vs SQL&lt;/h3&gt;
+        <description>&lt;h2&gt; An Introduction to Databases: &lt;/h2&gt;
+
+&lt;p&gt;Before delving into the details of different database technologies, let&amp;#39;s begin by going over the very definition of what a database even is. &lt;/p&gt;
+
+&lt;h3&gt; What is a database? &lt;/h3&gt;
+
+&lt;p&gt;A database is structured set of data - this data can include numbers, text, or any other representation of meaningful information. &lt;/p&gt;
+
+&lt;h3&gt; Why are databases important? &lt;/h3&gt;
+
+&lt;p&gt;Without even knowing it, you use databases all the time. For every Google search or Facebook profile view, you&amp;#39;re engaging with a database - the details are just hidden behind a user interface. Databases make the lives of developers easier by providing them with a structured and uniform set of data that they can then use to manipulate in anyway. &lt;/p&gt;
+
+&lt;h3&gt; NoSQL vs SQL: &lt;/h3&gt;
 
 &lt;p&gt;&lt;b&gt; NoSQL: &lt;/b&gt; 
 &lt;li&gt; &lt;q&gt;Not only&lt;/q&gt; SQL
@@ -28,7 +40,7 @@
 
 &lt;hr&gt;
 
-&lt;h3&gt; Part 2: MongoDB &lt;/h3&gt;
+&lt;h3&gt; MongoDB &lt;/h3&gt;
 
 &lt;p&gt;&lt;b&gt; Why Mongo? &lt;/b&gt;
 &lt;li&gt; Flexible!
@@ -55,56 +67,39 @@
         <category>mongoDB</category>
         
         
-        <category>databases</category>
+        <category>Databases</category>
         
       </item>
     
       <item>
-        <title>Memoization</title>
-        <description>&lt;h4&gt; Memoization &lt;/h4&gt;
+        <title>Percolation Theory</title>
+        <description>&lt;h4&gt; Percolation Theory &lt;/h4&gt;
 </description>
         <pubDate>Sun, 08 Nov 2015 00:00:00 -0500</pubDate>
-        <link>http://lesley2958.github.io/2015-11-08/memoization/</link>
-        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/memoization/</guid>
+        <link>http://lesley2958.github.io/2015-11-08/percolation-theory/</link>
+        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/percolation-theory/</guid>
         
-        <category>Algorithms</category>
+        <category>Networks</category>
         
         
-        <category>Memoization</category>
+        <category>Networks</category>
         
       </item>
     
       <item>
-        <title>CYK Algorithm</title>
-        <description>&lt;h4&gt; CYK Algorithm &lt;/h4&gt;
+        <title>Getting Started with Natural Language Processing</title>
+        <description>&lt;h4&gt; Getting Started with Natural Language Processing &lt;/h4&gt;
 </description>
         <pubDate>Sun, 08 Nov 2015 00:00:00 -0500</pubDate>
-        <link>http://lesley2958.github.io/2015-11-08/cyk-algorithm/</link>
-        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/cyk-algorithm/</guid>
+        <link>http://lesley2958.github.io/2015-11-08/natural-language-processing/</link>
+        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-08/natural-language-processing/</guid>
         
-        <category>Algorithms</category>
+        <category>NLP</category>
         
-        
-        <category>Algorithms</category>
-        
-      </item>
-    
-      <item>
-        <title>Dynamic Programming</title>
-        <description>&lt;h4&gt; Dynamic Programming &lt;/h4&gt;
-
-&lt;p&gt;Top Down vs Bottom Up&lt;/p&gt;
-</description>
-        <pubDate>Sat, 07 Nov 2015 00:00:00 -0500</pubDate>
-        <link>http://lesley2958.github.io/2015-11-07/dynamic-programming/</link>
-        <guid isPermaLink="true">http://lesley2958.github.io/2015-11-07/dynamic-programming/</guid>
-        
-        <category>DynamicProgramming</category>
+        <category>DataScience</category>
         
         
-        <category>Dynamic</category>
-        
-        <category>Programming</category>
+        <category>DataScience</category>
         
       </item>
     

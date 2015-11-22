@@ -9,7 +9,7 @@
 }
 
 .navbar-tiffany{
-    background-color: #2ca6cb;
+    background-color: #551A8B;
     border-top: 1px solid rgba(255,255,255,0.2);
     border-bottom: 1px solid rgba(0,0,0,0.1);
     box-shadow: 2px 4px 5px rgba(3,3,3,0.2);
@@ -25,7 +25,7 @@
 }
 .footnote-tiffany{
     background-color: #333333;
-    border-color: #2ca6cb;
+    border-color: #551A8B;
     box-shadow: 2px -4px 5px rgba(3,-3,3,0.2);
 }
 
@@ -77,7 +77,7 @@
 }
 
 .footnote .foot-item:hover{
-    background-color: #2ca6cb;
+    background-color: #551A8B;
     -webkit-transition: background .4s ease-in-out;
     -moz-transition: background .4s ease-in-out;
     -ms-transition: background .4s ease-in-out;
@@ -234,7 +234,7 @@ a:active {text-decoration: none}	/* 选定的链接 */
     width: 100%;
     padding-top: 15px;
     padding-bottom: 15px;
-    background-color: #2ca6cb;
+    background-color: #551A8B;
     display: none;
 }
 
