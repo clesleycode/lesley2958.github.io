@@ -29,7 +29,7 @@
     line-height: 1.5;
 }
 .post header h2{
-    color: #2ca6cb;
+    color: #551A8B;
 }
 .post header p.post-meta{
     color: #817c7c;
@@ -76,9 +76,6 @@
 }
 
 @media screen and (min-width: 1200px){
-    /**
-      * 文章目录相关
-      */
     .post .toc {
         display: none!important;
     }
@@ -111,10 +108,10 @@
 }
 
 
-.content-navigation a:link {color: #333;text-decoration: none;}		/* 未访问的链接 */
-.content-navigation a:visited {color: #99b  }	/* 已访问的链接 */
-.content-navigation a:hover {color: #99b;}	/* 鼠标移动到链接上 */
-.content-navigation a:active {color: #99b}	/* 选定的链接 */
+.content-navigation a:link {color: #333;text-decoration: none;}		
+.content-navigation a:visited {color: #99b  }	
+.content-navigation a:hover {color: #99b;}
+.content-navigation a:active {color: #99b}
 
 .content-navigation{
     max-width: 292px;
