@@ -25,14 +25,17 @@ SQL is the standard computer language for relational database management. An imp
 NoSQL, or "not only" SQL, stores data in more ways than just the traditional tabular relations. 
 
 <h3> What are some types of NoSQL? </h3>
-<li> Document Oriented (Mongo!)
-<li> Key Value
-<li> Graph
-<li> Column Oriented
+<li> <b>Document Oriented:</b> pairs each key with a document, which can contain many different key-value or key-array pairs.
+<li> <b>Key Value:</b> 
+<li> <b>Graph</b>
+<li> <b>Column Oriented</b>
 
+<h3> Why use NoSQL over SQL? </h3>
 ------------------------------
 
 <h3> What is MongoDB? </h3>
+
+MongoDB is document oriented NoSQL database.
 
 <b> Why Mongo? </b>
 <li> Flexible!
