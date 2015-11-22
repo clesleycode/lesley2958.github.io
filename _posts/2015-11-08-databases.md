@@ -30,29 +30,6 @@ NoSQL, or "not only" SQL, stores data in more ways than just the traditional tab
 <li> <b>Graph</b>
 <li> <b>Column Oriented</b>
 
-<h3> Why use NoSQL over SQL? </h3>
-------------------------------
-
-<h3> What is MongoDB? </h3>
-
-MongoDB is document oriented NoSQL database.
-
-<b> Why Mongo? </b>
-<li> Flexible!
-<li> Speed - efficient indexing/storage techniques
-<li> Scalability
-<li> Querying
-
-<b> Space: </b>
-
-Because Mongo dynamically allocates and de-allocates RAM, it can be run on a small amount of RAM. 
-<br>
-
--> Stores data in BSON structure, which is stored in a collection.<br>
--> Great [Documentation]
 
 
-<b>Mongo Shell:</b>
-
-[Documentation]: http://mongodb.com
 
