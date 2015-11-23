@@ -105,6 +105,16 @@ can be either <i>computers</i> or <i>computer</i>. If you want to extend this to
 ```
 This would evaluate to either <i>February</i> or <i>Feb</i>.
 
+<b> Kleene Star: </b>
+
+```
+/[ab]*/
+```
+
+<b> Let's try some examples in Python: </b>
+
+First, install the re module in python.
+
 ``` bash
 $ pip install re
 ```
