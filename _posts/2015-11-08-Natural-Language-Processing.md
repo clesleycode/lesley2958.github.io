@@ -9,7 +9,7 @@ categories: DataScience
 
 <h3> Pre-requisites: </h3>
 
-This post assumed some knowledge of Python.
+This post assumes some knowledge of Python.
 
 <h3> What is Natural Language Processing? </h3>
 
