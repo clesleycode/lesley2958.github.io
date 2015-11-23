@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Getting Started with Natural Language Processing"
-tags: NLP DataScience
+tags: NLP DataScience 
 categories: DataScience
 ---
 
@@ -11,11 +11,6 @@ categories: DataScience
 
 This post assumed some knowledge of Python.
 
-First, install the nltk module:
-
-``` bash
-$ pip install nltk
-```
 <h3> What is Natural Language Processing? </h3>
 
 Natural Language Processing, or NLP, is an area of computer science that focuses on developing techniques used to produce machine-driven analyses of text.
@@ -129,16 +124,4 @@ To represent the expressions containing at <b>least</b> one or more instances of
 /ab+
 ```
 
-<b> Let's try some examples in Python: </b>
 
-First, install the re module in python.
-
-``` bash
-$ pip install re
-```
-
-<h3> Writing your first script: </h3>
-
-``` python
-import nltk
-```
