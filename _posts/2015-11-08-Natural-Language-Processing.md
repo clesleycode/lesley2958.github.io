@@ -107,8 +107,26 @@ This would evaluate to either <i>February</i> or <i>Feb</i>.
 
 <b> Kleene Star: </b>
 
+To represent the expressions containing zero or <b>more</b> instances of the previous character, we use an <b>asterisk</b> as the kleene star. To represent the set of strings containing <i>a, ab, abb, abbb, ...</i>, the following regular expression would be used:  
 ```
-/[ab]*/
+/ab*/
+```
+
+<b> Wildcards: </b>
+
+Wildcards are used to represent the possibility of any character and symbolized with a <b>period</b>. For example, 
+
+```
+/beg.n/
+```
+From this regular expression, the strings <i>begun, begin, began,</i> etc., can be generated. 
+
+<b> Kleene+: </b>
+
+To represent the expressions containing at <b>least</b> one or more instances of the previous character, we use a <b>plus</b> sign. To represent the set of strings containing <i>ab, abb, abbb, ...</i>, the following regular expression would be used:  
+
+```
+/ab+
 ```
 
 <b> Let's try some examples in Python: </b>
