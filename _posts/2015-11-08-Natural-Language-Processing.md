@@ -141,7 +141,26 @@ N-gram language models are used in the context of prediction. Using the n-1 item
 <b> How are N-Gram Language Models Formed? </b>
 
 <li> Training Corpus: This corpus is used to produce the n-gram probabilities. 
-<li> Test Corpus: To evaluate the accuracy of the language model, a test corpus is used on the model.  
+<li> Test Corpus: To evaluate the accuracy of the language model, a test corpus is used on the model. 
+
+<b> What's the difference between a unigram, bigram, trigram, etc? </b>
+
+All of these are types of n-gram language models. The prefix "uni", "bi", "tri", etc., refers to the size of the partitions of a text. Unigram, the more typical n-gram model, would consist of partitions of size 1, while bigrams would refer to partitions of size 2. So the sentence <i>The cat in the hat</i> would be split in the following ways: 
+
+Unigram:
+<li> The
+<li> cat
+<li> in
+<li> the 
+<li> hat
+
+Bigram: 
+<li> The cat
+<li> cat in
+<li> in the
+<li> the hat
+
+Notice that the partitions must be in order. In other words, a possible partition for the bigram model could not be <i>cat hat</i> since they're not in sequential order.
 
 <b> Parts of Speech Tagging: </b>
 
