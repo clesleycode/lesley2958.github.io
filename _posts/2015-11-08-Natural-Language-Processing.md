@@ -162,6 +162,22 @@ Bigram:
 
 Notice that the partitions must be in order. In other words, a possible partition for the bigram model could not be <i>cat hat</i> since they're not in sequential order.
 
+<b> So how many n-grams would there be in a given model? </b>
+
+|N-Grams| = (Total Number of Words) - (N - 1)
+
+<b> Analyzing Text: </b>
+
+Part of analyzing a text involves changing the form of the words. In some cases, you might convert every word to its lemma or stem. 
+
+<b> What is a lemma? </b>
+
+The lemma of a word refers to its dictionary form. For example, given the words <i>amusement, amusing, </i>and <i>amused</i>, the lemma for each and all would be <i>amuse</i>.
+
+<b> What is a stem? </b>
+
+The stem of a word refers to the non-changing portion of a word whenever it's changed to another part of speech. In the example of amusing, amusement, and amused above, the stem would be <i>amus</i>.
+
 <b> Parts of Speech Tagging: </b>
 
 Parts of Speech (POS) Tagging is exactly what it suggests - to mark each piece of a text with a corresponding English language characteristic, i.e., verb, noun, adverb, adjective, etc.
