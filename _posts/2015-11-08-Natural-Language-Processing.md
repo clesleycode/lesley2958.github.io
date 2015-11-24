@@ -48,16 +48,20 @@ are distinguishable from eachother. This means <i>python</i> and <i>Python</i> w
 
 <b> Disjunctions: </b>
 
-If you want a regular expression to represent both <i>python</i> and <i>Python</i>, however, you can use <b>brackets</b> as the disjunction of the two forms. For example, 
+If you want a regular expression to represent both <i>python</i> and <i>Python</i>, however, you can use <b>brackets</b> or the <b>pipe</b> symbol as the disjunction of the two forms. For example, 
 ``` 
-/[Pp]ython/
+/[Pp]ython/ or /Python|python/
 ```
 could represent either <i>python</i> or <i>Python</i>. Likewise, 
 
 ``` 
-/[0123456789]/
+/[0123456789]/ 
 ```
-would represent a single integer digit. 
+would represent a single integer digit. The pipe symbols are typically used for interchangable strings, such as in the following example:
+
+```
+/dog|cat/
+```
 
 <b> Ranges: </b>
 
@@ -123,5 +127,12 @@ To represent the expressions containing at <b>least</b> one or more instances of
 ```
 /ab+
 ```
+
+<h3> N-Grams: </h3>
+
+<b> What is an n-gram? </b>
+
+An n-gram is a sequence of n items from a specific text or corpus.
+
 
 
