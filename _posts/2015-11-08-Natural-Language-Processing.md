@@ -138,6 +138,13 @@ An n-gram is a sequence of n items from a specific text or corpus.
 
 N-gram language models are used in the context of prediction. Using the n-1 items of a piece of text, the nth item can be predicted through an n-gram language model.
 
+<b> How are N-Gram Language Models Formed? </b>
+
+<li> Training Corpus: This corpus is used to produce the n-gram probabilities. 
+<li> Test Corpus: To evaluate the accuracy of the language model, a test corpus is used on the model.  
+
 <b> Parts of Speech Tagging: </b>
 
 Parts of Speech (POS) Tagging is exactly what it suggests - to mark each piece of a text with a corresponding English language characteristic, i.e., verb, noun, adverb, adjective, etc.
+
+
