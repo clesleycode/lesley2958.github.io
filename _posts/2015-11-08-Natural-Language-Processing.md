@@ -128,11 +128,16 @@ To represent the expressions containing at <b>least</b> one or more instances of
 /ab+
 ```
 
-<h3> N-Grams: </h3>
+<h3> N-Gram Language Models: </h3>
 
 <b> What is an n-gram? </b>
 
 An n-gram is a sequence of n items from a specific text or corpus.
 
+<b> What are N-Gram Language Models used for? </b>
 
+N-gram language models are used in the context of prediction. Using the n-1 items of a piece of text, the nth item can be predicted through an n-gram language model.
 
+<b> Parts of Speech Tagging: </b>
+
+Parts of Speech (POS) Tagging is exactly what it suggests - to mark each piece of a text with a corresponding English language characteristic, i.e., verb, noun, adverb, adjective, etc.
