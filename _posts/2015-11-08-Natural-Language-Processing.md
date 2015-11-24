@@ -136,7 +136,7 @@ An n-gram is a sequence of n items from a specific text or corpus.
 
 <b> What are N-Gram Language Models used for? </b>
 
-N-gram language models are used in the context of prediction. Using the n-1 items of a piece of text, the nth item can be predicted through an n-gram language model.
+N-gram language models are used in the context of prediction. Using the n-1 items of a piece of text, the nth item can be predicted through an n-gram language model (Markov Assumption). This can be mathematically represented with rules of probability: 
 
 <b> How are N-Gram Language Models Formed? </b>
 
@@ -163,8 +163,9 @@ Bigram:
 Notice that the partitions must be in order. In other words, a possible partition for the bigram model could not be <i>cat hat</i> since they're not in sequential order.
 
 <b> So how many n-grams would there be in a given model? </b>
-
+```
 |N-Grams| = (Total Number of Words) - (N - 1)
+```
 
 <b> Analyzing Text: </b>
 
