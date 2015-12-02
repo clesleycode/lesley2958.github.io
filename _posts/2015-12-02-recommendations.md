@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Percolation Theory"
-tags: Networks
-categories: Networks
+title: "Recommendations"
+tags: 
+categories: 
 ---
 
 <h1> Resource Recommendations </h1>
