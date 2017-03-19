@@ -33,7 +33,7 @@ email: "lc2958@columbia.edu"
 description: "That Comp Sci Girl"
 github_username:  "lesley2958"
 swiftype_searchId: "ncwR9a8S9CTx2q9SgsJm"
-gems: [jekyll-paginate][jekyll-gist]
+gems: [jekyll-paginate]
 
 
 url: "http://lesley2958.github.io"
