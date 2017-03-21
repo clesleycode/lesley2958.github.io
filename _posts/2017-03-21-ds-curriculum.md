@@ -5,7 +5,9 @@ tags: datascience, education
 categories: datascience, education 
 ---
 
-Before I was an undergraduate student, I relied almost exclusively on resources provided to me for free. My education flourished because of <i>free</i> resources like [Khan Academy(khanacademy.com) & [Google Docs](https://docs.google.com/). I can't even begin to emphasize the importance of accessibility for students of all backgrounds. It's with this in mind that I open source the Data Science Curriculum I've created over the past year. 
+Before I was an undergraduate student, I relied almost exclusively on resources provided to me for free. My education flourished because of <i>free</i> resources like [Khan Academy](khanacademy.com) & [Google Docs](https://docs.google.com/). I can't even begin to emphasize the importance of accessibility for students of all backgrounds. 
+
+It's with this in mind that I open source the Data Science Curriculum I've created over the past year. I want to note that not every guide is complete and sometimes contain overlapping information -- if you have any change suggestions, feel free to fork and contribute or submit a github issue!
 
 [Intro to Python](learn.adicu.com/python3) <br>
 [Intro to Statistics with Python](learn.adicu.com/stats) <br>
