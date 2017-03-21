@@ -16,34 +16,34 @@ It's with this in mind that I open source the Data Science Curriculum I've creat
 [Intro to R](http://learn.adicu.com/intro-r) <br>
 [Intro to Data Science with R](http://learn.adicu.com/data-science-r) <br>
 
-[Intro to Data Science](http://learn.adicu.com/data-sciene) <br>
-[Python vs R](http://learn.adicu.com/python-vs-r) <br>
+[Intro to Data Science](http://learn.adicu.com/data-science) <br>
+[Python vs R](http://learn.adicu.com/python-r) <br>
 
 [Data Acquisition with Python & R](http://learn.adicu.com/acq) <br>
 [Data Preparation with Python & R](http://learn.adicu.com/intro-data-prep) <br>
-[Data Cleaning with Python & R](http://learn/adicu.com/data-cleaning) <br>
+[Data Cleaning with Python & R](http://learn.adicu.com/data-cleaning) <br>
 
 [Intro to Data Visualization](http://learn.adicu.com/intro-dv) <br>
-[Data Visualization with R](http://learn.adicu.com/data-viz-r) <br>
+[Data Visualization with R](http://learn.adicu.com/r-visual) <br>
 [Advanced Data Visualization](http://learn.adicu.com/advanced-dv) <br>
 [Geospatial Data Analysis](http://learn.adicu.com/geospatial) <br>
 [Exploratory Data Analysis](http://learn.adicu.com/exp-analysis) <br>
 
-[Intro to Machine http://learning](http://learn.adicu.com/ml-intro) <br>
-[Regression Analysis](http://learn.adicu.com/ml-regression) <br>
+[Intro to Machine Learning](http://learn.adicu.com/ml-intro) <br>
+[Regression Analysis](http://learn.adicu.com/regression) <br>
 [ML: Naive Bayes](http://learn.adicu.com/ml-bayes) <br>
 [ML: Classification](http://learn.adicu.com/ml-classification) <br>
 [ML: Dimension Reduction](http://learn.adicu.com/ml-dim-red) <br>
 [ML: Optimization](http://learn.adicu.com/ml-optimization) <br>
 [ML: Tree Modeling](http://learn.adicu.com/ml-trees) <br>
-[ML: Unsupervised http://learning](http://learn.adicu.com/unsupervises) <br>
+[ML: Unsupervised Learning](http://learn.adicu.com/ml-unsupervised) <br>
 
 [Intro to Natural Language Processing with Python](http://learn.adicu.com/nlp) <br>
-[Intro to Natural Language Processing with R](http://learn.adicu.com/nlp-r) <br>
+[Intro to Natural Language Processing with R](http://learn.adicu.com/r-nlp) <br>
 [Intermediate Natural Language Processing](http://learn.adicu.com/intermediate-nlp) <br>
 [Advanced Natural Language Processing](http://learn.adicu.com/advanced-nlp) <br>
 
-[Deep http://learning with Python](http://learn.adicu.com/dl-python) <br>
+[Deep Learning with Python](http://learn.adicu.com/dl-python) <br>
 [Intro to Word2Vec](http://learn.adicu.com/word2vec) <br>
 
 [Intro to Databases with SQL](http://learn.adicu.com/sql) <br>
