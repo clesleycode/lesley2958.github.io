@@ -51,3 +51,4 @@ It's with this in mind that I open source the Data Science Curriculum I've creat
 [Intro to Hadoop](http://learn.adicu.com/hadoop) <br>
 [Intro to Spark](http://learn.adicu.com/spark) <br>
 
+
