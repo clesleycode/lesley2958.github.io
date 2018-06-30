@@ -1,0 +1,1113 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Gibbs Sampling: A Hands on Tutorial</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Gibbs-Sampling:-A-Hands-on-Tutorial">Gibbs Sampling: A Hands on Tutorial<a class="anchor-link" href="#Gibbs-Sampling:-A-Hands-on-Tutorial">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Imports">Imports<a class="anchor-link" href="#Imports">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">rc</span>
+<span class="n">rc</span><span class="p">(</span><span class="s2">&quot;font&quot;</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s2">&quot;serif&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">rc</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="n">usetex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">daft</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Defining-the-network">Defining the network<a class="anchor-link" href="#Defining-the-network">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">network</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">&quot;V&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Letter&quot;</span><span class="p">,</span> <span class="s2">&quot;Grade&quot;</span><span class="p">,</span> <span class="s2">&quot;Intelligence&quot;</span><span class="p">,</span> <span class="s2">&quot;SAT&quot;</span><span class="p">,</span> <span class="s2">&quot;Difficulty&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;E&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;Intelligence&quot;</span><span class="p">,</span> <span class="s2">&quot;Grade&quot;</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">&quot;Difficulty&quot;</span><span class="p">,</span> <span class="s2">&quot;Grade&quot;</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">&quot;Intelligence&quot;</span><span class="p">,</span> <span class="s2">&quot;SAT&quot;</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">&quot;Grade&quot;</span><span class="p">,</span> <span class="s2">&quot;Letter&quot;</span><span class="p">]],</span>
+    <span class="s2">&quot;Vdata&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;Letter&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ord&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">&quot;numoutcomes&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;weak&quot;</span><span class="p">,</span> <span class="s2">&quot;strong&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;parents&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Grade&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;children&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+            <span class="s2">&quot;cprob&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;[&#39;A&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">],</span>
+                <span class="s2">&quot;[&#39;B&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">4</span><span class="p">,</span> <span class="o">.</span><span class="mi">6</span><span class="p">],</span>
+                <span class="s2">&quot;[&#39;C&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">99</span><span class="p">,</span> <span class="o">.</span><span class="mo">01</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+
+        <span class="s2">&quot;SAT&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ord&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s2">&quot;numoutcomes&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lowscore&quot;</span><span class="p">,</span> <span class="s2">&quot;highscore&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;parents&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Intelligence&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;children&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+            <span class="s2">&quot;cprob&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;[&#39;low&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">95</span><span class="p">,</span> <span class="o">.</span><span class="mo">05</span><span class="p">],</span>
+                <span class="s2">&quot;[&#39;high&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span> <span class="o">.</span><span class="mi">8</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+
+        <span class="s2">&quot;Grade&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ord&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;numoutcomes&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;parents&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Difficulty&quot;</span><span class="p">,</span> <span class="s2">&quot;Intelligence&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;children&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Letter&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;cprob&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;[&#39;easy&#39;, &#39;low&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span> <span class="o">.</span><span class="mi">4</span><span class="p">,</span> <span class="o">.</span><span class="mi">3</span><span class="p">],</span>
+                <span class="s2">&quot;[&#39;easy&#39;, &#39;high&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">08</span><span class="p">,</span> <span class="o">.</span><span class="mo">02</span><span class="p">],</span>
+                <span class="s2">&quot;[&#39;hard&#39;, &#39;low&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="o">.</span><span class="mi">25</span><span class="p">,</span> <span class="o">.</span><span class="mi">7</span><span class="p">],</span>
+                <span class="s2">&quot;[&#39;hard&#39;, &#39;high&#39;]&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">3</span><span class="p">,</span> <span class="o">.</span><span class="mi">2</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+
+        <span class="s2">&quot;Intelligence&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ord&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;numoutcomes&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;parents&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+            <span class="s2">&quot;children&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;SAT&quot;</span><span class="p">,</span> <span class="s2">&quot;Grade&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;cprob&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">7</span><span class="p">,</span> <span class="o">.</span><span class="mi">3</span><span class="p">]</span>
+        <span class="p">},</span>
+
+        <span class="s2">&quot;Difficulty&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ord&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;numoutcomes&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;easy&quot;</span><span class="p">,</span> <span class="s2">&quot;hard&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;parents&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+            <span class="s2">&quot;children&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Grade&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;cprob&quot;</span><span class="p">:</span>  <span class="p">[</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="o">.</span><span class="mi">4</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Drawing-the-Bayesian-Network">Drawing the Bayesian Network<a class="anchor-link" href="#Drawing-the-Bayesian-Network">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pgm</span> <span class="o">=</span> <span class="n">daft</span><span class="o">.</span><span class="n">PGM</span><span class="p">([</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="n">origin</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="n">pgm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">daft</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="s1">&#39;Difficulty&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s2">&quot;Difficulty&quot;</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>   
+<span class="n">pgm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">daft</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="s1">&#39;Intelligence&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s2">&quot;Intelligence&quot;</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">pgm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">daft</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="s1">&#39;Grade&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s2">&quot;Grade&quot;</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>    
+<span class="n">pgm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">daft</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="s1">&#39;SAT&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s2">&quot;SAT&quot;</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>    
+<span class="n">pgm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">daft</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="s1">&#39;Letter&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s2">&quot;Letter&quot;</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>   
+
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">]:</span>
+    <span class="n">parents</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>        
+        <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
+            <span class="n">pgm</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> 
+<span class="n">pgm</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[3]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.axes._axes.Axes at 0x10e58b110&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+vZ7t5u/BM0zVLCK2B55KOSH9icBXgI8AnwMuWwkNLSL2pDSdo4CnU+4O8gHgPZn5tS7HpsWpR6c/
+EXgm8GvAlcCHKU3t0nrJx4kWEQ+gzNNfpczTu6nzFPhSusIfGsNUAxUR9waOBp5C+aPeH/g6cHHf
+cu04/1HXNwcHU/a9ra3LvSlj/zSlfbuPaYLVc1IfRwnVtZQG923K/+NL6sf1Yz5Pt6OMe23fsgtl
+/J+h3Pbva+P8b1hJDFMNVUTsQLkQQ38w3QtYX5cNdel9/v1R/PHXFdHelH1qa4B9+z4+FPgms98A
+XOVKaeWqbwIPYnYw7cTsedo/X28Y0Ty9F/AwZs/R3ud71bH0vwH4dj1VSCNmmGqk6n6c+zP/ymEN
+pQHeQLmi0ULL7ZTNV70lKQfTrarLvYBdKddIfSiwbf28t+wO/BxwHZuH+QZgw0rYNK029V6pc99o
+9ebrTmw+T2+e8/hHzJ6nm5iZo6so83I1s+dm/xzdjfK3cgObz9H1lHnqKWpjwjDVWImIXSkrkPlW
+ML1lR2avlIKZldXdwM8o+zTvAP475ZzPLzF7RXf9KG96rpWl3krtAWx5nu7EzBztvdnrD9e7gFvZ
+8hvH79aLp2jMGaZa0SIiATJznC4mLmmF8TxTrXQHAESEN+WWNDQ2U614tlNJw2Yz1TSwnUoaKpup
+poLtVNIw2Uw1LWynkobGZqqpYTuVNCw2U00T26mkobCZaqrYTiUNg81U08Z2KmngbKaaOrZTSYNm
+M9U0sp1KGiibqaaS7VTSINlMNa1sp5IGxmaqqWU7lTQoNlNNM9uppIGwmWqq2U4lDYLNVNPOdiqp
+mc1UU892KqmVzVSynUpqZDOVsJ1KamMzlQrbqaRls5lKle1U0nLZTKUZtlNJy2IzlfrYTiUth81U
+ms12KmnJbKbSHLZTSUtlM5U2ZzuVtCQ2U2ketlNJS2EzleZnO5W0aDZTaQG2U0mLZTOVFmY7lbQo
+NlNpC2ynkhbDZiptme1U0lbZTKWtsJ1K2hqbqbR1tlNJW2QzlRbBdippS2ym0uLYTiUtyGYqLZLt
+VNJCbKbS4tlOJc3LZiotge1U0nxsptLS2E4lbcZmKi2R7VTSXDZTaelsp5JmsZlKy2A7ldTPZiot
+j+1U0j1sptIy2U4l9dhMpeWznUoCbKZSE9upJLCZSq1sp5JsplIr26kkm6nUznYqTTmbqTQAtlNp
+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
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Finding-the-Markov-blanket-of-a-node">Finding the Markov blanket of a node<a class="anchor-link" href="#Finding-the-Markov-blanket-of-a-node">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">find_markov_blanket</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">network</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Find the Markov Blanket of the node in the given network</span>
+<span class="sd">    Markov Blanket is given by:</span>
+<span class="sd">    1. The parents of the node</span>
+<span class="sd">    2. The children of the node</span>
+<span class="sd">    3. The parents of the children of the node</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">mb</span><span class="o">=</span><span class="p">[]</span>
+    <span class="c1">#Finding the parents of the node</span>
+    <span class="n">parents</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    
+    <span class="c1">#Finding children of the node</span>
+    <span class="n">children</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s1">&#39;children&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">children</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+        
+        <span class="c1">#Finding parent of each node</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+            <span class="n">parents_child</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">child</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">parents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">mb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+                
+    <span class="c1">#Flattening out list of lists</span>
+    <span class="n">mb</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">mb</span><span class="p">))</span> 
+    
+    <span class="c1">#Removing repeated elements</span>
+    <span class="n">mb</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mb</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">mb</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">find_markov_blanket</span><span class="p">(</span><span class="s1">&#39;Grade&#39;</span><span class="p">,</span><span class="n">network</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[5]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>[&#39;Difficulty&#39;, &#39;Letter&#39;, &#39;Intelligence&#39;]</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h5 id="Gibbs-Sampling-Procedures">Gibbs Sampling Procedures<a class="anchor-link" href="#Gibbs-Sampling-Procedures">&#182;</a></h5>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Assigning-a-random-state-to-a-node-in-the-network">Assigning a random state to a node in the network<a class="anchor-link" href="#Assigning-a-random-state-to-a-node-in-the-network">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">pick_random</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">network</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Assigns a random state to a given node</span>
+<span class="sd">    N</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">num_outcomes</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;numoutcomes&quot;</span><span class="p">]</span>
+    <span class="n">random_index</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">num_outcomes</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;vals&quot;</span><span class="p">][</span><span class="n">random_index</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pick_random</span><span class="p">(</span><span class="s1">&#39;SAT&#39;</span><span class="p">,</span><span class="n">network</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[7]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;lowscore&#39;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Pick-a-random-non-evidence-node-to-the-update-in-the-current-iteration">Pick a random non evidence node to the update in the current iteration<a class="anchor-link" href="#Pick-a-random-non-evidence-node-to-the-update-in-the-current-iteration">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">pick_random_non_evidence_node</span><span class="p">(</span><span class="n">non_evidence_nodes</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">non_evidence_nodes</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">non_evidence_nodes</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Update-the-value-of-a-node-given-assignment-in-previous-iteration">Update the value of a node given assignment in previous iteration<a class="anchor-link" href="#Update-the-value-of-a-node-given-assignment-in-previous-iteration">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">get_next_value</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span><span class="n">simulation</span><span class="p">):</span>
+    <span class="n">parents_current_node_to_update</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parents_current_node_to_update</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1">#The node has no parent and we can update it based on the prior</span>
+        <span class="n">cumsum</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;cprob&quot;</span><span class="p">])</span>    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#Find the row corresponding to the values of the parents in the previous iteration</span>
+        <span class="c1">#NB We need to maintain the order, so we will do it </span>
+        <span class="n">values_parents</span><span class="o">=</span><span class="p">[</span><span class="n">simulation</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">parent</span><span class="p">]</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents_current_node_to_update</span><span class="p">]</span>
+        <span class="n">row</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;cprob&quot;</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="n">values_parents</span><span class="p">)]</span>
+        <span class="n">cumsum</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="n">choice</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">cumsum</span><span class="o">&gt;</span><span class="n">choice</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="s2">&quot;vals&quot;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span>
+    
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Main-procedure:-Iteratively-pick-up-a-non-evidence-node-to-update">Main procedure: Iteratively pick up a non evidence node to update<a class="anchor-link" href="#Main-procedure:-Iteratively-pick-up-a-non-evidence-node-to-update">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">gibbs_sampling</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">evidence</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="n">simulation</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]</span>
+    <span class="n">non_evidence_nodes</span><span class="o">=</span><span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">evidence</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>        
+    <span class="c1">#First iteration random value for all nodes</span>
+    <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">=</span><span class="n">pick_random</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">network</span><span class="p">)</span>    
+    <span class="c1">#Put evidence</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">evidence</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">=</span><span class="n">evidence</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>        
+    <span class="n">simulation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>        
+    <span class="c1">#Now iterate </span>
+    <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1">#Pick up a random node to start</span>
+        <span class="n">current_node_to_update</span><span class="o">=</span><span class="n">pick_random_non_evidence_node</span><span class="p">(</span><span class="n">non_evidence_nodes</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">current_node_to_update</span><span class="p">]</span><span class="o">=</span><span class="n">get_next_value</span><span class="p">(</span><span class="n">current_node_to_update</span><span class="p">,</span><span class="n">network</span><span class="p">,</span><span class="n">simulation</span><span class="p">)</span>
+        <span class="n">simulation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">simulation</span>      
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h5 id="Illustration-1">Illustration 1<a class="anchor-link" href="#Illustration-1">&#182;</a></h5>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Distribution-of-Letter-given-that-the-student-is-Intelligent">Distribution of Letter given that the student is Intelligent<a class="anchor-link" href="#Distribution-of-Letter-given-that-the-student-is-Intelligent">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">iterations</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e4</span><span class="p">)</span>
+<span class="n">sim</span><span class="o">=</span><span class="n">gibbs_sampling</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Intelligence&quot;</span><span class="p">:</span><span class="s2">&quot;high&quot;</span><span class="p">},</span><span class="n">iterations</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Removing first 10% samples</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">after_removing_burnt_samples</span><span class="o">=</span><span class="n">sim</span><span class="p">[</span><span class="n">iterations</span><span class="o">/</span><span class="mi">10</span><span class="p">:]</span>
+<span class="n">count</span><span class="o">=</span><span class="p">{</span><span class="n">val</span><span class="p">:</span><span class="mi">0</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="s1">&#39;Letter&#39;</span><span class="p">][</span><span class="s1">&#39;vals&#39;</span><span class="p">]}</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Finding the distribution of letter</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">after_removing_burnt_samples</span><span class="p">:</span>
+    <span class="n">count</span><span class="p">[</span><span class="n">assignment</span><span class="p">[</span><span class="s1">&#39;Letter&#39;</span><span class="p">]]</span><span class="o">+=</span><span class="mi">1</span>    
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Counts</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">count</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[14]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;strong&#39;: 7061, &#39;weak&#39;: 1940}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Counts to Probabilites</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">probabilites</span><span class="o">=</span><span class="p">{}</span>
+<span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">count</span><span class="p">:</span>
+    <span class="n">probabilites</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">=</span><span class="n">count</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="o">.</span><span class="mi">90</span><span class="o">*</span><span class="n">iterations</span><span class="p">)</span>
+<span class="n">probabilites</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[15]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;strong&#39;: 0.7845555555555556, &#39;weak&#39;: 0.21555555555555556}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Wait-a-min!-What-about-the-marginal-distribution-of-Letter-given-NO-evidence">Wait a min! What about the marginal distribution of Letter given NO evidence<a class="anchor-link" href="#Wait-a-min!-What-about-the-marginal-distribution-of-Letter-given-NO-evidence">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">iterations</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e4</span><span class="p">)</span>
+<span class="n">sim</span><span class="o">=</span><span class="n">gibbs_sampling</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="p">{},</span><span class="n">iterations</span><span class="p">)</span>
+<span class="n">after_removing_burnt_samples</span><span class="o">=</span><span class="n">sim</span><span class="p">[</span><span class="n">iterations</span><span class="o">/</span><span class="mi">10</span><span class="p">:]</span>
+<span class="n">count</span><span class="o">=</span><span class="p">{</span><span class="n">val</span><span class="p">:</span><span class="mi">0</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;Vdata&#39;</span><span class="p">][</span><span class="s1">&#39;Letter&#39;</span><span class="p">][</span><span class="s1">&#39;vals&#39;</span><span class="p">]}</span>
+<span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">after_removing_burnt_samples</span><span class="p">:</span>
+    <span class="n">count</span><span class="p">[</span><span class="n">assignment</span><span class="p">[</span><span class="s1">&#39;Letter&#39;</span><span class="p">]]</span><span class="o">+=</span><span class="mi">1</span>
+<span class="n">probabilites_no_evidence</span><span class="o">=</span><span class="p">{}</span>
+<span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">count</span><span class="p">:</span>
+    <span class="n">probabilites_no_evidence</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">=</span><span class="n">count</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="o">.</span><span class="mi">90</span><span class="o">*</span><span class="n">iterations</span><span class="p">)</span>
+<span class="n">probabilites_no_evidence</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[16]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;strong&#39;: 0.4766666666666667, &#39;weak&#39;: 0.5234444444444445}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="How-does-the-evidence-about-&quot;Intelligent&quot;-student-affect-the-quality-of-letters?">How does the evidence about "Intelligent" student affect the quality of letters?<a class="anchor-link" href="#How-does-the-evidence-about-&quot;Intelligent&quot;-student-affect-the-quality-of-letters?">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">),[</span><span class="n">probabilites</span><span class="p">[</span><span class="s1">&#39;strong&#39;</span><span class="p">],</span><span class="n">probabilites</span><span class="p">[</span><span class="s1">&#39;weak&#39;</span><span class="p">]])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],[</span><span class="s1">&#39;Strong&#39;</span><span class="p">,</span><span class="s1">&#39;Weak&#39;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Letter Quality given Intelligent Student&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">),[</span><span class="n">probabilites_no_evidence</span><span class="p">[</span><span class="s1">&#39;strong&#39;</span><span class="p">],</span><span class="n">probabilites_no_evidence</span><span class="p">[</span><span class="s1">&#39;weak&#39;</span><span class="p">]])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],[</span><span class="s1">&#39;Strong&#39;</span><span class="p">,</span><span class="s1">&#39;Weak&#39;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Letter Quality given no prior information&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">));</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAk0AAAD0CAYAAACGoBLMAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
+AAALEgAACxIB0t1+/AAAFp1JREFUeJzt3Tt8FFeWx/H/mSFdS4jAzgaE80Fg5xrA43gRNpttgph1
+vNbYbDJsYvDi3C82H2kH5zy340EMTDxG9mT25zN64I3N2aBuQ6lUj9Oqkvr1+34+/aG6HrduVV1O
+n7p1u2XuLgAAANT7xbArAAAAMA5ImgAAAAJImgAAAAJImgAAAAJImgAAAAJGPmkysyUzWzezF2Z2
+x8yOD7DtCTM70TSvZf3Om9ldM/vczFbNbKWDMlfMbMvMLufmrRXed30cu8o/KCXX81Rgm9CxFs9b
+5Dx2qameZna60FaWzexGdPuacpfN7FszW91v3dvsH7sRs17Om4iYNSxdHd8g5ZjZTFr/hpndbbvv
+/aj4PzAy1/rIsCvQxN1vm9mOpLvu/u6Am1+U9EzSdw3z9sXMLkq6Lum0u/9fmrdmZmvu/v5+y3X3
+m2b2TmH2J5J2cu87O46K8g9Eup4bktYlXeyftwahYy2et+B57FJTPdfc/c3+mxSUng2wfSl3/9rM
+ZiW9NVh19+i6TU0lYtZLExGzhqir4xuknKuSnrn71bY3YS2UtZORudYj39O0X2Y2I+lS07yWvpJ0
+o/DB/5Gki2Z2tsP9yN2fuvv30oEcx67yD5E1rtDxsR7UcTbVM905HS3M/n10+4M27P2DmNWm/EnU
+1fENWM5ppRs5dz/0eFDVTkbpWk9E0pS6w78odDW/L2le0iUzu14zr3T71N38wswu9x9/FPZ5XtKM
+pMf5+e7ez47fy5VxIXU53jWzF7kyfp/WWavrCs11fX9YdRypO/WFmX2e3q+Z2d+KjwbM7EruWL9I
+dbqVLz9XVr/su/2yKs7Vclq/X96mmS1XHU/J8ZVt3++KDV+zwH6K57HsfNwxs7MDHGdtPftSu7C0
+/xUzW3D3p5I+rdo+0H6uWPYYaFXS24Vj7bT+6BYxa3xiVtO6aXm//KWGMtbS65GZnau6bhWxas9+
+Atd8Vzl1MSAd01upHfTnXYnsMzcvX27/vK+b2VqhXlXtqCoORs5Fq8+hMHcf+Zekc5J+rlh2QtK3
+ufdbkk6l6W8lXSisv2tew/brku5Iek3SnUI5y5J+lnS8pE5bklZzZVxI0zP94+hPS/qninrdlXQ5
+935N0odVx5HmPeqvk+p3trB8VtKL3PsXkn6Tjq9Y/t9y9V6R9OuGc3VX0qM0vZDfT8n5WUjH/lrh
+eEu3H/CaFc9b5XmsOR+/3s9xll2TwnGfSu3p5/Ral7QQuKZl7Wc+1TffflZzyzqvPy9ilqY3ZpWu
+q6xnZqtQvz3nt6oMpRhYdt20O1ZV7qfumldch7oY8PIaDrrPQrnL/WuVO+9ng+2orJ1Ez0X4mu73
+NdY9TSlTvyjJzey6ZYNqHyn70Ihq2n7D3X/yvWMTNtK/sxXl/rlup+7+XNIZSW+mu5+jkuYGqHeZ
+ryT9Lk2/4+4PC8vPaPcYmg1J2+7+U0lZ/yXpP9L0SXf/q5rP1aokufuTtN5rA9Y/un3ba95Xej4k
+/bah/IGP08wWJH3n7u+6+y8lvSNpU1kwqN20Yv55ZWMP+o9Z7ueWLXVdf3SDmLXHOMWssnXfL9Tv
+L2mfkTKk3eMQq66bAvup27apHlXHvZ999sdBrWfF+//211U67x20o6Z6HWh8G/mB4FUsGyPynrLB
+YTvufrVh/YVcQ305T9Kxhu0fV8xfT/s+adkAyHlJj939lrJM+n7JNidz+55R9p98TdKXavG8P3ds
+a5K+TF2Sz0pWXZc0lxrRLyQd9ewR0R6eDS7+MnV9rqfZTeeq7UC9/PYmac8fRgxes6jS82Fm/9JQ
+fqiehfb2lrJE56YkpQ+Hh2a2WbaDsvaqXPsp22fOINcpWn+0RMx6ZUxjVtW6WwOUUZT/v1d13SL7
+adq2qBgDutrnTsX0y3IGaUc1caiuXgc6YHxceprKLuq/KesVuCfptKXn4Ok5an9A44akY+nu7kTF
+vLrtpYqLk7LlK8rGpLi7f6Asc74h6aN0l9Pfvp9F5+8q3pd0IgWsXyjrchzEnmNLdfqTpC/0KuMv
+epDW+VjZI4Q6X0n6KtVRaj5XeXX/Ea1hebGMQa/ZIMrOx6DlV9Uzb0vSx/0yU7nzehXcq7avaj/3
+Jc3n7qLO55YdRP0xGGLWXuMcs6rWXdXuc7Qg6X9qtnsn1eO0soQp//+/LhFo2k+bxO0g9lkX45va
+UVMcGuScD3JNY7p+3tf1S9mjhnVlz0DvKPvP1X//72mdD/XqGWv+2e2yskcgqw3z9myf9ruZ5p2q
+qd9ZZRfxc2XPU38uLD+nrEv4c70aU3BH0vE0/05adl3ZM/njuX0/UjYOZtf7quPI7e9vFXXtP0f/
+Ofe6UFZ+bv1i+U3n6rikG6nszwPX81TT9vu4ZqXnreR96fnY73FWXZPcttdz13olTefHdZUdZ2n7
+Scsu61X7WU3bHkj9eRGzNN0xq+7/zWW9Svr+uea8303nbS3V+zcl5Z8qzMufvz37abrmNddlz7G0
+2WfJftZSuZcLy44rS4RK21FZO9lnvWqvaZuXpZ3VquuqT12hO8p+9+NmY2ETLHU7binr0n5vGOcj
+1eE9f3WnlV+2JOm8Z3eYSndcH/ngvyUzETgf04MYVo6YdXgs+5bYWtlxYnw0Pp5LXWSlXV/p+bq7
++wNJOxb4dedJ5llX83Nl3fDN2WiHLPvK7QlJV2v+U17S7ufQ23o1OHQacT6mADGsGjELGEzjQHB3
+f2BmZQP0pKxB939jYUPZuIrSQXpT5LqyZ+/vHfJ+55V1V35as84nkq6a2Ull31hwZT9sN604H1OA
+GNaImHXAUo/ZGUlHzWzdKwazY/S1/fbcrHYPBjvWsryxl7q3D72L2wN/AiH9R+VXnxPOB0QMI2Yd
+Ane/Len2sOuB9sbl23MAAABD1TZp2tarr6bOKhu5DgDjghgGICz6eG7Xbx2Y2UwaQLim7DntQ2XP
+p+/t2dDsUAcXAhgN7t79b6Ts375iGPELmE5V8Svy7bklSWfM7EJu9v1U6JO0zjllP21f9UutvAqv
+P/zhD0OvA6/xeo1TmxklbWPYsM/lqL7GqT3yGo3XuLSZOpFvz+0ZwObub+em+c0JACOLGAagKwwE
+BwAACCBpGpLFxcVhVwFjhjaDUUJ7xKAmoc2E/oxKqx2Y+UHvA8BoMTP5aA0E3xfiFzB96uIXPU0A
+AAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAAB
+JE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0A
+AAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAABJE0AAAAB
+R5pWMLMlSTuSTrv7zZrlJ9z9VvdVBID9I4YB6EptT5OZLUhyd38gacfMTpUs30jLvysuB4BhIoYB
+6FLT47lLyu7AJGlD0vmSdT5N/867+9OuKgYAHSCGAehMU9I0K2kr9/5YfqG7P5G0YWZbkjY7rhsA
+tEUMA9CZVgPBzWxG0rakTyR9bWbHO6gTABwKYhiAQTQNBN+WNJemZ7X3TuyKpOvu/pOZbUi6KOmz
+YiHXrl17Ob24uKjFxcV9VhfAKOr1eur1esOuRpnWMYz4BUy2QeKXuXv1wmyQ5Bl3v2VmK5LuuftT
+M5tx9+dm9qGkr939eVr/cvHbJ2bmdfsAMHnMTO5uI1CPVjGM+AVMn7r4VZs0pY0vS/pOua/jmtkj
+d387Ta9IeiZpruzrugQdYPqMStIktYthxC9g+rRKmjrYORFnzL3++q/0ww/fD7saGCOjlDS1QdIE
+TJ8RSJoIOuPNxAcHBkHSBGBc1cUv/owKAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABA
+AEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkT
+AABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABA
+AEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAAEkTAABAwJGmFcxsSdKOpNPufrNk+YKkeUly
+99ud1xAAWiCGAehKbU9TCibu7g8k7ZjZqZLVrqZAc6JiOQAMBTEMQJeaHs9dUnaHJkkbks7nF6Y7
+uD9Lkrt/5u5PO68hAOwfMQxAZ5qSpllJW7n3xwrL35Z0zMwWzGyl05oBQHvEMACd6WIg+Ka7P5Fe
+3rUBwDghhgEIaRoIvi1pLk3PStosLN9U1uUtZV3gb0kqGUh5LTe9mF4AJkWv11Ov1xt2Ncq0jmHX
+rl17Ob24uKjFxcUDqCaAYRkkfpm7Vy/MBlGecfdbqev6nrs/NbMZd39uZickLbn7Z2n5M3f/plCG
+S9X7wDgw1bUToMjM5O42AvVoFcPMzGn7wHSpi1+1j+dyXdbnJG3nBkneT8u/U/aNlCVJc8WECQCG
+iRgGoEu1PU2d7ICepglATxMGMyo9TW3R0wRMn333NAEAACBD0gQAABBA0gQAABBA0gQAABBA0gQA
+ABBA0gQAABBA0gQAABBA0gQAABBA0gQAABBA0gQAABBA0gQAABBwZNgVAABgUrzxxnH9+OPfh10N
+HBD+YC8C+IO9GAx/sBfTyszEZ9644w/2AgAAtELSBAAAEEDSBAAAEEDSBAAAEEDSBAAAEEDSBAAA
+EEDSBAAAEEDSBAAAEMAvggNAjezHCjGuXn/9V/rhh++HXQ1MCH4RHAH8IjgGM0m/CE78GneHG7/4
+RfBJwC+CAwAAtELSBAAAEEDSBAAAEEDSBAAAEEDSBAAAEEDSBAAAEEDSBAAAEEDSBAAAENCYNJnZ
+kpmdM7OVhvVqlwPAMBDDAHSlNmkyswVJ7u4PJO2Y2amK9c5JOn8A9QOAfSOGAehSU0/TJUk7aXpD
+BBUA44UYBqAzTUnTrKSt3PtjxRXMbCHdxY3935kCMHGIYQA608VA8KMdlAEAw0IMAxBypGH5tqS5
+ND0raTO/MN2hPUxva/6s87Xc9GJ6AZgUvV5PvV5v2NUo00EMu5abXhTxC5g0vfRqZu7VuU4aRHnG
+3W+lb5bcc/enZjbj7s/NbElZoDkm6XeSLrv700IZXptPYQyY6toJUGRmcvehP+5qG8OIX5PgcOOX
+mYk2M+6q41ft4zl3fyK9/GbJdi6Y3E/Lb7v7N2neTEe1BYBOEMMAdKm2p6mTHXCnNgHoacJgRqWn
+qS3i1ySgpwmD2mdPEwAAADIkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAA
+AAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEk
+TQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAA
+AAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAEkTQAAAAFHmlYwsyVJO5JOu/vNkuXLafKku3/ccf0A
+oBViGICu1PY0mdmCJHf3B5J2zOxUYfk5Sffc/WtJ82Z29uCqCgCDIYYB6FLT47lLyu7QJGlD0vnC
+8vncvI30HmjljTeOy8x4jfFrhBDDAHSm6fHcrKSt3Ptj+YXp7qzvtKQ/dlQvTLEff/y7JB92NdDK
+yCROxDAAnelkIHjqAn/s7k+7KA8ADhMxDEBEU0/TtqS5ND0rabNivXPufrW6mGu56cX0AjA5euk1
+cjqIYddy04sifgGTpqdo/DL36scg6e7rjLvfMrMVZQMmn5rZjLs/T+ss97u4zexcGnCZL8N51DLu
+THXtpPO9mYk2M+5M7j70Z3RtYxjxaxIQvzCo6vhV+3jO3Z9IL79hsp3rur6fm3/DzL41s03RUgCM
+EGIYgC7V9jR1sgPu1CYAd2oY1Gj0NLVF/JoExC8Map89TQAAAMiQNAEAAASQNAEAAASQNAEAAASQ
+NAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEA
+AASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQ
+NAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAASQNAEAAAQcaVrB
+zJYk7Ug67e43B10OAMNEDAPQldqeJjNbkOTu/kDSjpmdGmQ56vSGXQGMnd6wKzB2iGEHqTfsCmDs
+9IZdgdaaHs9dUnYHJkkbks4PuByVesOuAMZOb9gVGEfEsAPTG3YFMHZ6w65Aa01J06ykrdz7YwMu
+B4BhIoYB6AwDwQEAAAKaBoJvS5pL07OSNgdcntj+ajfx/nPYFQgzO+xrSJspNz5tZkR0EMNoi9XG
+oz0Sv0bJeLSZKk1J05qkM5IeSpqXdE+SzGzG3Z9XLc9zd1oPgGFpFcOIXwDyah/PufsTSTKzc5K2
+3f1pWnS/YTkADB0xDECXzN2HXYexZmYryu5Qd5T1yf7D3T8bbq0AoBnxCxgMA8FbMLMTkk66+wfu
+flXSP3LLbgyvZhh1ZvaFmb0wsw/NbMHMvjWzR2Z2ysyW+8sGKG/FzF4cZJ0xWYhfaGNaYxg9TS2k
+Lv1PJZ1L4yNkZhckPZD02N3fHGb9MNrM7GdJZ9z9abrjP+/u76Zln7v7B4OW5+6/PIi6YvIQv9DW
+NMYweppaSL8iLEnbZnbXzJbc/RtlP5A3nzLw47ms+5yZrZvZiZSlr5jZF5KUW+d6KuuL/n7MbC2V
+tWZmq2Z2dgiHi+7dVvbjipJ0UumHFVMPwONhVQrTgfiFDkxdDCNpasnd31LWULYlrZnZdXe/nZZ9
+5u7fu/vX/dUlfSLpX7PF2d+5MrPLuXX+6O6/lfR+WrYkaTONM9iStOruDw/r+HCgViVdTNM7kjbS
+3f95pYHK6cPpw8KH0I30IbVmZsfzBZrZa+mD7U5xGVBE/EJLUxfDSJpaSHdaM+7+0N0vSTqqVw2o
+zLN0J/eGpGf9ecq+8ixl3975a5reNLPXlDXE/u/IzOnVn3zA+Lsv6WR6JPJnSX+S9I6keXf/3syW
+lX04fabs76JdTndwJ9KH1CPtbm+m7G7vnru/6+7fH+bBYLwQv9CBqYthJE3tXe1PuPtPkv6S3m5L
+L7+d0l/+9zT5TFnDUPp3PU3nfxOmP70h6Wgq5x53aZMjjSP5i7JxJfeV/WZQPoCckTSXBlPOpG2+
+k3Q/tYe3tffPftyQdPqAq47JQfzCvk1jDCNpas9T1+OymV2X9FGaf9/MViU9Tl3UbmaXJSnXrb2S
+vfX/TuvMmNmF1L15VNIVZY3nLUkfS/p9ytwxOVal7AMr/WbQnLI7Nin7cNpKj0k+UNaWlpV94+mm
+dv/NNKVy3pVktBMEEb/Q1lTFML49N+Is++rvXXd/aGYzktb6307A+Etd1VfSV76VPqiW011///2W
+ssca15Xd2X+lNF5A2diB95Td0a2l6ZPK7tZ+5+63Du9ogN2IX5Nv2mIYSdOIS3d3J5U1ujnRxQ1g
+TBC/MGlImgAAAAIY0wQAABBA0gQAABBA0gQAABBA0gQAABBA0gQAABBA0gQAABDw/7Sw+WKJepNK
+AAAAAElFTkSuQmCC
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

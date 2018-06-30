@@ -1,0 +1,2865 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Tensor Factorisation in Keras</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Tensor-Factorisation-in-Keras">Tensor Factorisation in Keras<a class="anchor-link" href="#Tensor-Factorisation-in-Keras">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>I have written a <a href="../nnmf-tensorflow.html">few</a> <a href="../nmf-autograd.html">posts</a> <a href="../nmf-cvx.html">earlier</a> <a href="../nmf-out-matrix.html">about</a> <a href="../mf-autograd-adagrad.html">matrix</a> <a href="../contrained-nmf-cvx.html">factorisation</a> <a href="../nmf-nnls.html">using</a> various Python libraries. The main application I had in mind for matrix factorisation was <a href="https://en.wikipedia.org/wiki/Recommender_system">recommender systems</a>. In this post, I'll write about using <a href="https://keras.io">Keras</a> for creating recommender systems. <a href="https://github.com/maciejkula/triplet_recommendations_keras">Various</a> <a href="http://blog.richardweiss.org/2016/09/25/movie-embeddings.html">people</a> <a href="https://github.com/bradleypallen/keras-movielens-cf">have</a> <a href="https://github.com/hexiangnan/neural_collaborative_filtering">written</a> <a href="https://github.com/sonyisme/keras-recommendation">excellent</a> <a href="http://course.fast.ai/lessons/lesson4.html">similar</a> <a href="https://github.com/maciejkula/spotlight">posts</a> and code that I draw a lot of inspiration from, and give them their credit! I'm assuming that a reader has some experience with Keras, as this post is not intended to be an introduction to Keras.</p>
+<p>Specifically, in this post, I'll talk about:</p>
+<ol>
+<li>Matrix Factorisation in Keras</li>
+<li>Adding non-negativitiy constraints to solve non-negative matrix factorisation (NNMF)</li>
+<li>Using neural networks for recommendations</li>
+</ol>
+<p>I'll be using the Movielens-100k dataset for illustration. There are 943 users and 1682 movies. In total there are a 100k ratings in the dataset. It should be noted that the max. total number of rating for the &lt;users, movies&gt; would be 943*1682, which means that we have about 7% of the total ratings! All rating are on a scale of 1-5.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Task"><strong>Task</strong><a class="anchor-link" href="#Task">&#182;</a></h3><p>Given this set of ratings, can we recommend the next set of movies to a user? This would translate to: for every user, estimating the ratings for all the movies that (s)he hasn't watched and maybe recommend the top-k movies by the esimtated ratings!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Peak-into-the-dataset">Peak into the dataset<a class="anchor-link" href="#Peak-into-the-dataset">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-9-44e7f67a0f4d&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>np<span class="ansi-blue-fg">.</span>tensordot<span class="ansi-blue-fg">(</span>x<span class="ansi-blue-fg">,</span> y<span class="ansi-blue-fg">,</span> axes<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>shape
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/core/numeric.py</span> in <span class="ansi-cyan-fg">tensordot</span><span class="ansi-blue-fg">(a, b, axes)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1315</span>                 axes_b<span class="ansi-blue-fg">[</span>k<span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">+=</span> ndb
+<span class="ansi-green-intense-fg ansi-bold">   1316</span>     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> equal<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1317</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">raise</span> ValueError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#34;shape-mismatch for sum&#34;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1318</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1319</span>     <span class="ansi-red-fg"># Move the axes to sum over to the end of &#34;a&#34;</span>
+
+<span class="ansi-red-fg">ValueError</span>: shape-mismatch for sum</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="n">t_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">z</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">t_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;xr, yr, zr -&gt;xyz&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">t_1</span><span class="p">,</span> <span class="n">t_2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-11-797465e142a6&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">      3</span> z <span class="ansi-blue-fg">=</span> np<span class="ansi-blue-fg">.</span>random<span class="ansi-blue-fg">.</span>randn<span class="ansi-blue-fg">(</span><span class="ansi-cyan-fg">80</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">3</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      4</span> 
+<span class="ansi-green-fg">----&gt; 5</span><span class="ansi-red-fg"> </span>t_1 <span class="ansi-blue-fg">=</span> np<span class="ansi-blue-fg">.</span>tensordot<span class="ansi-blue-fg">(</span>np<span class="ansi-blue-fg">.</span>tensordot<span class="ansi-blue-fg">(</span>x<span class="ansi-blue-fg">,</span> y<span class="ansi-blue-fg">,</span> axes<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> z<span class="ansi-blue-fg">,</span> axes<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      6</span> t_2 <span class="ansi-blue-fg">=</span> np<span class="ansi-blue-fg">.</span>einsum<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;xr, yr, zr -&gt;xyz&#39;</span><span class="ansi-blue-fg">,</span> x<span class="ansi-blue-fg">,</span> y<span class="ansi-blue-fg">,</span> z<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      7</span> np<span class="ansi-blue-fg">.</span>allclose<span class="ansi-blue-fg">(</span>t_1<span class="ansi-blue-fg">,</span> t_2<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/core/numeric.py</span> in <span class="ansi-cyan-fg">tensordot</span><span class="ansi-blue-fg">(a, b, axes)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1315</span>                 axes_b<span class="ansi-blue-fg">[</span>k<span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">+=</span> ndb
+<span class="ansi-green-intense-fg ansi-bold">   1316</span>     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> equal<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1317</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">raise</span> ValueError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#34;shape-mismatch for sum&#34;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1318</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1319</span>     <span class="ansi-red-fg"># Move the axes to sum over to the end of &#34;a&#34;</span>
+
+<span class="ansi-red-fg">ValueError</span>: shape-mismatch for sum</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-22-4ee03cd5026a&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>np<span class="ansi-blue-fg">.</span>tensordot<span class="ansi-blue-fg">(</span>x<span class="ansi-blue-fg">,</span> y<span class="ansi-blue-fg">,</span> axes<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>shape
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/core/numeric.py</span> in <span class="ansi-cyan-fg">tensordot</span><span class="ansi-blue-fg">(a, b, axes)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1315</span>                 axes_b<span class="ansi-blue-fg">[</span>k<span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">+=</span> ndb
+<span class="ansi-green-intense-fg ansi-bold">   1316</span>     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> equal<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1317</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">raise</span> ValueError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#34;shape-mismatch for sum&#34;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1318</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1319</span>     <span class="ansi-red-fg"># Move the axes to sum over to the end of &#34;a&#34;</span>
+
+<span class="ansi-red-fg">ValueError</span>: shape-mismatch for sum</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So, each record (row) shows the rating for a user, item (movie) pair. It should be noted that I use  item and movie interchangeably in this post.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">values</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">values</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[6]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>195</td>
+      <td>241</td>
+      <td>3</td>
+      <td>881250949</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>185</td>
+      <td>301</td>
+      <td>3</td>
+      <td>891717742</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>21</td>
+      <td>376</td>
+      <td>1</td>
+      <td>878887116</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>243</td>
+      <td>50</td>
+      <td>2</td>
+      <td>880606923</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>165</td>
+      <td>345</td>
+      <td>1</td>
+      <td>886397596</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Train-test-split">Train test split<a class="anchor-link" href="#Train-test-split">&#182;</a></h3><p>We'll now split our dataset of 100k ratings into train (containing 80k ratings) and test (containing 20k ratings). Given the train set, we'd like to accurately estimate the ratings in the test set.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">train_test_split</span>
+<span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[8]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>36694</th>
+      <td>460</td>
+      <td>254</td>
+      <td>2</td>
+      <td>885355890</td>
+    </tr>
+    <tr>
+      <th>12110</th>
+      <td>227</td>
+      <td>203</td>
+      <td>3</td>
+      <td>889388662</td>
+    </tr>
+    <tr>
+      <th>4933</th>
+      <td>4</td>
+      <td>240</td>
+      <td>1</td>
+      <td>875720948</td>
+    </tr>
+    <tr>
+      <th>98491</th>
+      <td>928</td>
+      <td>97</td>
+      <td>5</td>
+      <td>879640394</td>
+    </tr>
+    <tr>
+      <th>25545</th>
+      <td>453</td>
+      <td>403</td>
+      <td>3</td>
+      <td>888267590</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[9]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>77402</th>
+      <td>891</td>
+      <td>228</td>
+      <td>3</td>
+      <td>886610011</td>
+    </tr>
+    <tr>
+      <th>16503</th>
+      <td>369</td>
+      <td>658</td>
+      <td>4</td>
+      <td>879435033</td>
+    </tr>
+    <tr>
+      <th>28080</th>
+      <td>199</td>
+      <td>178</td>
+      <td>4</td>
+      <td>884129029</td>
+    </tr>
+    <tr>
+      <th>84580</th>
+      <td>652</td>
+      <td>355</td>
+      <td>1</td>
+      <td>880151734</td>
+    </tr>
+    <tr>
+      <th>36995</th>
+      <td>331</td>
+      <td>894</td>
+      <td>5</td>
+      <td>887916385</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Matrix-factorisation">Matrix factorisation<a class="anchor-link" href="#Matrix-factorisation">&#182;</a></h3><p>One popular recommender systems approach is called Matrix Factorisation. It works on the principle that we can learn a low-dimensional representation (embedding) of user and movie. For example, for each movie, we can have how much action it has, how long it is, and so on. For each user, we can encode how much they like action, or how much they like long movies, etc. Thus, we can combine the user and the movie embeddings to estimate the ratings on unseen movies. This approach can also be viewed as: given a matrix (A [M X N]) containing users and movies, we want to estimate low dimensional matrices (W [M X k] and H [M X k]), such that: $A \approx W.H^T$</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Matrix-factorisation-in-Keras">Matrix factorisation in Keras<a class="anchor-link" href="#Matrix-factorisation-in-Keras">&#182;</a></h3><p>We'll now write some code to solve the recommendation problem by matrix factorisation in Keras. We're trying to learn two low-dimensional embeddings of users and items.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[53]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">SVG</span>
+<span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="k">import</span> <span class="n">Adam</span>
+<span class="kn">from</span> <span class="nn">keras.utils.vis_utils</span> <span class="k">import</span> <span class="n">model_to_dot</span>
+<span class="n">n_users</span><span class="p">,</span> <span class="n">n_movies</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()),</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+<span class="n">n_latent_factors</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The key thing is to learn an embedding for movies and users, and then combine them using the dot product! For estimating the rating, for each user, movie pair of interest, we'd take the dot product of the respective user and item embedding. As an example, if we have 2 dimensions in our user and item embedding, which say correspond to [how much user likes action, how much user likes long movies], and the item embedding is [how much action is in the movie, how long is the movie]. Then, we can predict for a user <code>u</code>, and movie <code>m</code> as how much <code>u</code> likes action $\times$ how much action is there in <code>m</code> $+$ how much <code>u</code> likes long movies $\times$ how long is <code>m</code>.</p>
+<p>Our model would optimise the emebedding such that we minimise the mean squared error on the ratings from the train set.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">movie_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Item&#39;</span><span class="p">)</span>
+<span class="n">movie_embedding</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_movies</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_latent_factors</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Movie-Embedding&#39;</span><span class="p">)(</span><span class="n">movie_input</span><span class="p">)</span>
+<span class="n">movie_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenMovies&#39;</span><span class="p">)(</span><span class="n">movie_embedding</span><span class="p">)</span>
+
+<span class="n">user_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
+<span class="n">user_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenUsers&#39;</span><span class="p">)(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_users</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_latent_factors</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;User-Embedding&#39;</span><span class="p">)(</span><span class="n">user_input</span><span class="p">))</span>
+
+<span class="n">prod</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">movie_vec</span><span class="p">,</span> <span class="n">user_vec</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DotProduct&#39;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">([</span><span class="n">user_input</span><span class="p">,</span> <span class="n">movie_input</span><span class="p">],</span> <span class="n">prod</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_squared_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here's a visualisation of our model for a better understanding.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>  <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_layer_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rankdir</span><span class="o">=</span><span class="s1">&#39;HB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[12]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="296pt" viewBox="0.00 0.00 681.82 296.00" width="682pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 292)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-292 677.815,-292 677.815,4 -4,4" stroke="none"/>
+<!-- 4728744144 -->
+<g class="node" id="node1"><title>4728744144</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="48.2275,-243.5 48.2275,-287.5 284.783,-287.5 284.783,-243.5 48.2275,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="103.847" y="-261.3">Item: InputLayer</text>
+<polyline fill="none" points="159.466,-243.5 159.466,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="187.3" y="-272.3">input:</text>
+<polyline fill="none" points="159.466,-265.5 215.135,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="187.3" y="-250.3">output:</text>
+<polyline fill="none" points="215.135,-243.5 215.135,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="249.959" y="-272.3">(None, 1)</text>
+<polyline fill="none" points="215.135,-265.5 284.783,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="249.959" y="-250.3">(None, 1)</text>
+</g>
+<!-- 4728744256 -->
+<g class="node" id="node3"><title>4728744256</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-162.5 0,-206.5 333.011,-206.5 333.011,-162.5 0,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="96.8467" y="-180.3">Movie-Embedding: Embedding</text>
+<polyline fill="none" points="193.693,-162.5 193.693,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.528" y="-191.3">input:</text>
+<polyline fill="none" points="193.693,-184.5 249.362,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.528" y="-169.3">output:</text>
+<polyline fill="none" points="249.362,-162.5 249.362,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="291.187" y="-191.3">(None, 1)</text>
+<polyline fill="none" points="249.362,-184.5 333.011,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="291.187" y="-169.3">(None, 1, 3)</text>
+</g>
+<!-- 4728744144&#45;&gt;4728744256 -->
+<g class="edge" id="edge1"><title>4728744144-&gt;4728744256</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M166.505,-243.329C166.505,-235.183 166.505,-225.699 166.505,-216.797" fill="none" stroke="black"/>
+<polygon fill="black" points="170.005,-216.729 166.505,-206.729 163.005,-216.729 170.005,-216.729" stroke="black"/>
+</g>
+<!-- 4728745432 -->
+<g class="node" id="node2"><title>4728745432</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="393.838,-243.5 393.838,-287.5 631.173,-287.5 631.173,-243.5 393.838,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="449.847" y="-261.3">User: InputLayer</text>
+<polyline fill="none" points="505.855,-243.5 505.855,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="533.69" y="-272.3">input:</text>
+<polyline fill="none" points="505.855,-265.5 561.524,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="533.69" y="-250.3">output:</text>
+<polyline fill="none" points="561.524,-243.5 561.524,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="596.349" y="-272.3">(None, 1)</text>
+<polyline fill="none" points="561.524,-265.5 631.173,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="596.349" y="-250.3">(None, 1)</text>
+</g>
+<!-- 4728744648 -->
+<g class="node" id="node4"><title>4728744648</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="351.195,-162.5 351.195,-206.5 673.815,-206.5 673.815,-162.5 351.195,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="442.847" y="-180.3">User-Embedding: Embedding</text>
+<polyline fill="none" points="534.498,-162.5 534.498,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="562.333" y="-191.3">input:</text>
+<polyline fill="none" points="534.498,-184.5 590.167,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="562.333" y="-169.3">output:</text>
+<polyline fill="none" points="590.167,-162.5 590.167,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="631.991" y="-191.3">(None, 1)</text>
+<polyline fill="none" points="590.167,-184.5 673.815,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="631.991" y="-169.3">(None, 1, 3)</text>
+</g>
+<!-- 4728745432&#45;&gt;4728744648 -->
+<g class="edge" id="edge2"><title>4728745432-&gt;4728744648</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M512.505,-243.329C512.505,-235.183 512.505,-225.699 512.505,-216.797" fill="none" stroke="black"/>
+<polygon fill="black" points="516.005,-216.729 512.505,-206.729 509.005,-216.729 516.005,-216.729" stroke="black"/>
+</g>
+<!-- 4728745040 -->
+<g class="node" id="node5"><title>4728745040</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="50.269,-81.5 50.269,-125.5 332.742,-125.5 332.742,-81.5 50.269,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="121.847" y="-99.3">FlattenMovies: Flatten</text>
+<polyline fill="none" points="193.424,-81.5 193.424,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.259" y="-110.3">input:</text>
+<polyline fill="none" points="193.424,-103.5 249.093,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.259" y="-88.3">output:</text>
+<polyline fill="none" points="249.093,-81.5 249.093,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="290.917" y="-110.3">(None, 1, 3)</text>
+<polyline fill="none" points="249.093,-103.5 332.742,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="290.917" y="-88.3">(None, 3)</text>
+</g>
+<!-- 4728744256&#45;&gt;4728745040 -->
+<g class="edge" id="edge3"><title>4728744256-&gt;4728745040</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M173.205,-162.329C175.811,-154.094 178.849,-144.493 181.693,-135.507" fill="none" stroke="black"/>
+<polygon fill="black" points="185.107,-136.319 184.787,-125.729 178.433,-134.207 185.107,-136.319" stroke="black"/>
+</g>
+<!-- 4728744536 -->
+<g class="node" id="node6"><title>4728744536</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="363.328,-81.5 363.328,-125.5 635.683,-125.5 635.683,-81.5 363.328,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="429.847" y="-99.3">FlattenUsers: Flatten</text>
+<polyline fill="none" points="496.366,-81.5 496.366,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="524.2" y="-110.3">input:</text>
+<polyline fill="none" points="496.366,-103.5 552.035,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="524.2" y="-88.3">output:</text>
+<polyline fill="none" points="552.035,-81.5 552.035,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="593.859" y="-110.3">(None, 1, 3)</text>
+<polyline fill="none" points="552.035,-103.5 635.683,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="593.859" y="-88.3">(None, 3)</text>
+</g>
+<!-- 4728744648&#45;&gt;4728744536 -->
+<g class="edge" id="edge4"><title>4728744648-&gt;4728744536</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M509.022,-162.329C507.681,-154.183 506.12,-144.699 504.656,-135.797" fill="none" stroke="black"/>
+<polygon fill="black" points="508.076,-135.028 502.999,-125.729 501.169,-136.165 508.076,-135.028" stroke="black"/>
+</g>
+<!-- 4728745208 -->
+<g class="node" id="node7"><title>4728745208</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="185.744,-0.5 185.744,-44.5 505.267,-44.5 505.267,-0.5 185.744,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="247.86" y="-18.3">DotProduct: Merge</text>
+<polyline fill="none" points="309.977,-0.5 309.977,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="337.812" y="-29.3">input:</text>
+<polyline fill="none" points="309.977,-22.5 365.646,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="337.812" y="-7.3">output:</text>
+<polyline fill="none" points="365.646,-0.5 365.646,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="435.457" y="-29.3">[(None, 3), (None, 3)]</text>
+<polyline fill="none" points="365.646,-22.5 505.267,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="434.97" y="-7.3">(None, 1)</text>
+</g>
+<!-- 4728745040&#45;&gt;4728745208 -->
+<g class="edge" id="edge5"><title>4728745040-&gt;4728745208</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M232.775,-81.3294C252.013,-71.4605 275.075,-59.63 295.313,-49.2479" fill="none" stroke="black"/>
+<polygon fill="black" points="297.089,-52.2704 304.39,-44.5919 293.894,-46.0421 297.089,-52.2704" stroke="black"/>
+</g>
+<!-- 4728744536&#45;&gt;4728745208 -->
+<g class="edge" id="edge6"><title>4728744536-&gt;4728745208</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M458.236,-81.3294C438.998,-71.4605 415.936,-59.63 395.697,-49.2479" fill="none" stroke="black"/>
+<polygon fill="black" points="397.116,-46.0421 386.621,-44.5919 393.921,-52.2704 397.116,-46.0421" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see that in the <code>Merge</code> layer, we take the dot product of the user and the item embeddings to obtain the rating.</p>
+<p>We can also summarise our model as follows:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+Item (InputLayer)               (None, 1)            0                                            
+__________________________________________________________________________________________________
+User (InputLayer)               (None, 1)            0                                            
+__________________________________________________________________________________________________
+Movie-Embedding (Embedding)     (None, 1, 3)         5049        Item[0][0]                       
+__________________________________________________________________________________________________
+User-Embedding (Embedding)      (None, 1, 3)         2832        User[0][0]                       
+__________________________________________________________________________________________________
+FlattenMovies (Flatten)         (None, 3)            0           Movie-Embedding[0][0]            
+__________________________________________________________________________________________________
+FlattenUsers (Flatten)          (None, 3)            0           User-Embedding[0][0]             
+__________________________________________________________________________________________________
+DotProduct (Merge)              (None, 1)            0           FlattenMovies[0][0]              
+                                                                 FlattenUsers[0][0]               
+==================================================================================================
+Total params: 7,881
+Trainable params: 7,881
+Non-trainable params: 0
+__________________________________________________________________________________________________
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So, we have 7881 parameters to learn! Let's train our model now!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">train</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">train</span><span class="o">.</span><span class="n">item_id</span><span class="p">],</span> <span class="n">train</span><span class="o">.</span><span class="n">rating</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Train-error-v/s-epoch-number">Train error v/s epoch number<a class="anchor-link" href="#Train-error-v/s-epoch-number">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Before we test how well our model does in the test setting, we can visualise the train loss with epoch number.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">logy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Epoch&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Train Error&quot;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[15]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.text.Text at 0x119f0ae48&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+GUsAAAAASUVORK5CYII=
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Prediction-error">Prediction error<a class="anchor-link" href="#Prediction-error">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's now see how our model does! I'll do a small post-processing step to round off our prediction to the nearest integer. This is usually not done, and thus just a whimsical step, since the training ratings are all integers! There are better ways to encode this intger requirement (one-hot encoding!), but we won't discuss them in this post.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">test</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">item_id</span><span class="p">]),</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">y_true</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">rating</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">mean_absolute_error</span>
+<span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_hat</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[17]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.69315000000000004</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Not bad! We're able to get a $MAE$ of 0.69! I'm sure with a bit of parameter/hyper-parameter optimisation, we may be able to improve the results. However, I won't talk about these optimisations in this post.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Extracting-the-learnt-embeddings">Extracting the learnt embeddings<a class="anchor-link" href="#Extracting-the-learnt-embeddings">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can extract the learnt movie and item embeddings as follows:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">movie_embedding_learnt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Movie-Embedding&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">movie_embedding_learnt</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[18]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>1683.000000</td>
+      <td>1683.000000</td>
+      <td>1683.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>-0.984843</td>
+      <td>-0.603969</td>
+      <td>1.041909</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.406160</td>
+      <td>0.670511</td>
+      <td>0.446950</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-2.353670</td>
+      <td>-3.060338</td>
+      <td>-1.466393</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-1.274978</td>
+      <td>-1.112795</td>
+      <td>0.738104</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>-0.990592</td>
+      <td>-0.631524</td>
+      <td>1.069417</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>-0.705720</td>
+      <td>-0.123005</td>
+      <td>1.348613</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>0.412110</td>
+      <td>2.587206</td>
+      <td>3.013140</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">user_embedding_learnt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;User-Embedding&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">user_embedding_learnt</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[19]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>944.000000</td>
+      <td>944.000000</td>
+      <td>944.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>-1.293906</td>
+      <td>-0.854671</td>
+      <td>1.216010</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.368389</td>
+      <td>0.631125</td>
+      <td>0.479045</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-2.682317</td>
+      <td>-2.569576</td>
+      <td>-0.205914</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-1.528671</td>
+      <td>-1.283581</td>
+      <td>0.893250</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>-1.305850</td>
+      <td>-0.931421</td>
+      <td>1.199088</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>-1.077751</td>
+      <td>-0.508994</td>
+      <td>1.553708</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>0.377835</td>
+      <td>1.809386</td>
+      <td>3.263695</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see that both the user and the item embeddings have negative elements. There are some applications which require that the learnt embeddings be non-negative. This approach is also called non-negative matrix factorisation, which we'll workout now.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Non-negative-Matrix-factorisation-(NNMF)-in-Keras">Non-negative Matrix factorisation (NNMF) in Keras<a class="anchor-link" href="#Non-negative-Matrix-factorisation-(NNMF)-in-Keras">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The code for NNMF remains exactly the same as the code for matrix factorisation. The only change is that we add <code>non-negativity</code> constraints on the learnt embeddings. This is done as follows:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">keras.constraints</span> <span class="k">import</span> <span class="n">non_neg</span>
+<span class="n">movie_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Item&#39;</span><span class="p">)</span>
+<span class="n">movie_embedding</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_movies</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_latent_factors</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;NonNegMovie-Embedding&#39;</span><span class="p">,</span> <span class="n">embeddings_constraint</span><span class="o">=</span><span class="n">non_neg</span><span class="p">())(</span><span class="n">movie_input</span><span class="p">)</span>
+<span class="n">movie_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenMovies&#39;</span><span class="p">)(</span><span class="n">movie_embedding</span><span class="p">)</span>
+
+<span class="n">user_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
+<span class="n">user_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenUsers&#39;</span><span class="p">)(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_users</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_latent_factors</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;NonNegUser-Embedding&#39;</span><span class="p">,</span><span class="n">embeddings_constraint</span><span class="o">=</span><span class="n">non_neg</span><span class="p">())(</span><span class="n">user_input</span><span class="p">))</span>
+
+<span class="n">prod</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">movie_vec</span><span class="p">,</span> <span class="n">user_vec</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DotProduct&#39;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">([</span><span class="n">user_input</span><span class="p">,</span> <span class="n">movie_input</span><span class="p">],</span> <span class="n">prod</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_squared_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now verify if we are indeed able to learn non-negative embeddings. I'll not compare the performance of NNMF on the test set, in the interest of space.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">history_nonneg</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">train</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">train</span><span class="o">.</span><span class="n">item_id</span><span class="p">],</span> <span class="n">train</span><span class="o">.</span><span class="n">rating</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">movie_embedding_learnt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;NonNegMovie-Embedding&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">movie_embedding_learnt</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[22]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>1683.000000</td>
+      <td>1683.000000</td>
+      <td>1683.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>0.841644</td>
+      <td>0.842097</td>
+      <td>0.840586</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.296384</td>
+      <td>0.297492</td>
+      <td>0.296452</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-0.000000</td>
+      <td>-0.000000</td>
+      <td>-0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>0.650189</td>
+      <td>0.652484</td>
+      <td>0.649923</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>0.895204</td>
+      <td>0.893022</td>
+      <td>0.889767</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>1.073633</td>
+      <td>1.077216</td>
+      <td>1.071834</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>1.382212</td>
+      <td>1.375976</td>
+      <td>1.370250</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Looks good!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Neural-networks-for-recommendation">Neural networks for recommendation<a class="anchor-link" href="#Neural-networks-for-recommendation">&#182;</a></h3><p>We'll now create a simple neural network for recommendation, or for estimating rating! This model is very similar to the earlier matrix factorisation models, but differs in the following ways:</p>
+<ol>
+<li>Instead of taking a dot product of the user and the item embedding, we concatenate them and use them as features for our neural network. Thus, we are not constrained to the dot product way of combining the embeddings, and can learn complex non-linear relationships.</li>
+<li>Due to #1, we can now have a different dimension of user and item embeddings. This can be useful if one dimension is larger than the other.</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[80]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">n_latent_factors_user</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">n_latent_factors_movie</span> <span class="o">=</span> <span class="mi">8</span>
+
+<span class="n">movie_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Item&#39;</span><span class="p">)</span>
+<span class="n">movie_embedding</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_movies</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_latent_factors_movie</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Movie-Embedding&#39;</span><span class="p">)(</span><span class="n">movie_input</span><span class="p">)</span>
+<span class="n">movie_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenMovies&#39;</span><span class="p">)(</span><span class="n">movie_embedding</span><span class="p">)</span>
+<span class="n">movie_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)(</span><span class="n">movie_vec</span><span class="p">)</span>
+
+
+<span class="n">user_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
+<span class="n">user_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenUsers&#39;</span><span class="p">)(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_users</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_latent_factors_user</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;User-Embedding&#39;</span><span class="p">)(</span><span class="n">user_input</span><span class="p">))</span>
+<span class="n">user_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)(</span><span class="n">user_vec</span><span class="p">)</span>
+
+
+<span class="n">concat</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">movie_vec</span><span class="p">,</span> <span class="n">user_vec</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;concat&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Concat&#39;</span><span class="p">)</span>
+<span class="n">concat_dropout</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)(</span><span class="n">concat</span><span class="p">)</span>
+<span class="n">dense</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FullyConnected&#39;</span><span class="p">)(</span><span class="n">concat</span><span class="p">)</span>
+<span class="n">dropout_1</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dropout&#39;</span><span class="p">)(</span><span class="n">dense</span><span class="p">)</span>
+<span class="n">dense_2</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FullyConnected-1&#39;</span><span class="p">)(</span><span class="n">concat</span><span class="p">)</span>
+<span class="n">dropout_2</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dropout&#39;</span><span class="p">)(</span><span class="n">dense_2</span><span class="p">)</span>
+<span class="n">dense_3</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FullyConnected-2&#39;</span><span class="p">)(</span><span class="n">dense_2</span><span class="p">)</span>
+<span class="n">dropout_3</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dropout&#39;</span><span class="p">)(</span><span class="n">dense_3</span><span class="p">)</span>
+<span class="n">dense_4</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FullyConnected-3&#39;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">dense_3</span><span class="p">)</span>
+
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activation&#39;</span><span class="p">)(</span><span class="n">dense_4</span><span class="p">)</span>
+<span class="n">adam</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.005</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">([</span><span class="n">user_input</span><span class="p">,</span> <span class="n">movie_input</span><span class="p">],</span> <span class="n">result</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">adam</span><span class="p">,</span><span class="n">loss</span><span class="o">=</span> <span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's now see how our model looks like:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[81]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>  <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_layer_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rankdir</span><span class="o">=</span><span class="s1">&#39;HB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[81]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="701pt" viewBox="0.00 0.00 681.82 701.00" width="682pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 697)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-697 677.815,-697 677.815,4 -4,4" stroke="none"/>
+<!-- 112543382328 -->
+<g class="node" id="node1"><title>112543382328</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="48.2275,-648.5 48.2275,-692.5 284.783,-692.5 284.783,-648.5 48.2275,-648.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="103.847" y="-666.3">Item: InputLayer</text>
+<polyline fill="none" points="159.466,-648.5 159.466,-692.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="187.3" y="-677.3">input:</text>
+<polyline fill="none" points="159.466,-670.5 215.135,-670.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="187.3" y="-655.3">output:</text>
+<polyline fill="none" points="215.135,-648.5 215.135,-692.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="249.959" y="-677.3">(None, 1)</text>
+<polyline fill="none" points="215.135,-670.5 284.783,-670.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="249.959" y="-655.3">(None, 1)</text>
+</g>
+<!-- 112543382496 -->
+<g class="node" id="node3"><title>112543382496</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-567.5 0,-611.5 333.011,-611.5 333.011,-567.5 0,-567.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="96.8467" y="-585.3">Movie-Embedding: Embedding</text>
+<polyline fill="none" points="193.693,-567.5 193.693,-611.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.528" y="-596.3">input:</text>
+<polyline fill="none" points="193.693,-589.5 249.362,-589.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.528" y="-574.3">output:</text>
+<polyline fill="none" points="249.362,-567.5 249.362,-611.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="291.187" y="-596.3">(None, 1)</text>
+<polyline fill="none" points="249.362,-589.5 333.011,-589.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="291.187" y="-574.3">(None, 1, 8)</text>
+</g>
+<!-- 112543382328&#45;&gt;112543382496 -->
+<g class="edge" id="edge1"><title>112543382328-&gt;112543382496</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M166.505,-648.329C166.505,-640.183 166.505,-630.699 166.505,-621.797" fill="none" stroke="black"/>
+<polygon fill="black" points="170.005,-621.729 166.505,-611.729 163.005,-621.729 170.005,-621.729" stroke="black"/>
+</g>
+<!-- 112542907920 -->
+<g class="node" id="node2"><title>112542907920</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="393.838,-648.5 393.838,-692.5 631.173,-692.5 631.173,-648.5 393.838,-648.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="449.847" y="-666.3">User: InputLayer</text>
+<polyline fill="none" points="505.855,-648.5 505.855,-692.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="533.69" y="-677.3">input:</text>
+<polyline fill="none" points="505.855,-670.5 561.524,-670.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="533.69" y="-655.3">output:</text>
+<polyline fill="none" points="561.524,-648.5 561.524,-692.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="596.349" y="-677.3">(None, 1)</text>
+<polyline fill="none" points="561.524,-670.5 631.173,-670.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="596.349" y="-655.3">(None, 1)</text>
+</g>
+<!-- 112543382832 -->
+<g class="node" id="node4"><title>112543382832</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="351.195,-567.5 351.195,-611.5 673.815,-611.5 673.815,-567.5 351.195,-567.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="442.847" y="-585.3">User-Embedding: Embedding</text>
+<polyline fill="none" points="534.498,-567.5 534.498,-611.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="562.333" y="-596.3">input:</text>
+<polyline fill="none" points="534.498,-589.5 590.167,-589.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="562.333" y="-574.3">output:</text>
+<polyline fill="none" points="590.167,-567.5 590.167,-611.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="631.991" y="-596.3">(None, 1)</text>
+<polyline fill="none" points="590.167,-589.5 673.815,-589.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="631.991" y="-574.3">(None, 1, 5)</text>
+</g>
+<!-- 112542907920&#45;&gt;112543382832 -->
+<g class="edge" id="edge2"><title>112542907920-&gt;112543382832</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M512.505,-648.329C512.505,-640.183 512.505,-630.699 512.505,-621.797" fill="none" stroke="black"/>
+<polygon fill="black" points="516.005,-621.729 512.505,-611.729 509.005,-621.729 516.005,-621.729" stroke="black"/>
+</g>
+<!-- 112543382888 -->
+<g class="node" id="node5"><title>112543382888</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="50.269,-486.5 50.269,-530.5 332.742,-530.5 332.742,-486.5 50.269,-486.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="121.847" y="-504.3">FlattenMovies: Flatten</text>
+<polyline fill="none" points="193.424,-486.5 193.424,-530.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.259" y="-515.3">input:</text>
+<polyline fill="none" points="193.424,-508.5 249.093,-508.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.259" y="-493.3">output:</text>
+<polyline fill="none" points="249.093,-486.5 249.093,-530.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="290.917" y="-515.3">(None, 1, 8)</text>
+<polyline fill="none" points="249.093,-508.5 332.742,-508.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="290.917" y="-493.3">(None, 8)</text>
+</g>
+<!-- 112543382496&#45;&gt;112543382888 -->
+<g class="edge" id="edge3"><title>112543382496-&gt;112543382888</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M173.205,-567.329C175.811,-559.094 178.849,-549.493 181.693,-540.507" fill="none" stroke="black"/>
+<polygon fill="black" points="185.107,-541.319 184.787,-530.729 178.433,-539.207 185.107,-541.319" stroke="black"/>
+</g>
+<!-- 112542809952 -->
+<g class="node" id="node6"><title>112542809952</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="363.328,-486.5 363.328,-530.5 635.683,-530.5 635.683,-486.5 363.328,-486.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="429.847" y="-504.3">FlattenUsers: Flatten</text>
+<polyline fill="none" points="496.366,-486.5 496.366,-530.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="524.2" y="-515.3">input:</text>
+<polyline fill="none" points="496.366,-508.5 552.035,-508.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="524.2" y="-493.3">output:</text>
+<polyline fill="none" points="552.035,-486.5 552.035,-530.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="593.859" y="-515.3">(None, 1, 5)</text>
+<polyline fill="none" points="552.035,-508.5 635.683,-508.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="593.859" y="-493.3">(None, 5)</text>
+</g>
+<!-- 112543382832&#45;&gt;112542809952 -->
+<g class="edge" id="edge4"><title>112543382832-&gt;112542809952</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M509.022,-567.329C507.681,-559.183 506.12,-549.699 504.656,-540.797" fill="none" stroke="black"/>
+<polygon fill="black" points="508.076,-540.028 502.999,-530.729 501.169,-541.165 508.076,-540.028" stroke="black"/>
+</g>
+<!-- 112542908200 -->
+<g class="node" id="node7"><title>112542908200</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="76.5449,-405.5 76.5449,-449.5 336.466,-449.5 336.466,-405.5 76.5449,-405.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="143.847" y="-423.3">dropout_43: Dropout</text>
+<polyline fill="none" points="211.148,-405.5 211.148,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="238.983" y="-434.3">input:</text>
+<polyline fill="none" points="211.148,-427.5 266.817,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="238.983" y="-412.3">output:</text>
+<polyline fill="none" points="266.817,-405.5 266.817,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="301.642" y="-434.3">(None, 8)</text>
+<polyline fill="none" points="266.817,-427.5 336.466,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="301.642" y="-412.3">(None, 8)</text>
+</g>
+<!-- 112543382888&#45;&gt;112542908200 -->
+<g class="edge" id="edge5"><title>112543382888-&gt;112542908200</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M195.525,-486.329C197.072,-478.183 198.873,-468.699 200.563,-459.797" fill="none" stroke="black"/>
+<polygon fill="black" points="204.048,-460.206 202.475,-449.729 197.17,-458.901 204.048,-460.206" stroke="black"/>
+</g>
+<!-- 112543214000 -->
+<g class="node" id="node8"><title>112543214000</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="361.545,-405.5 361.545,-449.5 621.466,-449.5 621.466,-405.5 361.545,-405.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="428.847" y="-423.3">dropout_44: Dropout</text>
+<polyline fill="none" points="496.148,-405.5 496.148,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="523.983" y="-434.3">input:</text>
+<polyline fill="none" points="496.148,-427.5 551.817,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="523.983" y="-412.3">output:</text>
+<polyline fill="none" points="551.817,-405.5 551.817,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="586.642" y="-434.3">(None, 5)</text>
+<polyline fill="none" points="551.817,-427.5 621.466,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="586.642" y="-412.3">(None, 5)</text>
+</g>
+<!-- 112542809952&#45;&gt;112543214000 -->
+<g class="edge" id="edge6"><title>112542809952-&gt;112543214000</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M497.362,-486.329C496.537,-478.183 495.576,-468.699 494.675,-459.797" fill="none" stroke="black"/>
+<polygon fill="black" points="498.145,-459.325 493.655,-449.729 491.181,-460.031 498.145,-459.325" stroke="black"/>
+</g>
+<!-- 112543379584 -->
+<g class="node" id="node9"><title>112543379584</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="201.192,-324.5 201.192,-368.5 495.819,-368.5 495.819,-324.5 201.192,-324.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="250.86" y="-342.3">Concat: Merge</text>
+<polyline fill="none" points="300.529,-324.5 300.529,-368.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="328.363" y="-353.3">input:</text>
+<polyline fill="none" points="300.529,-346.5 356.198,-346.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="328.363" y="-331.3">output:</text>
+<polyline fill="none" points="356.198,-324.5 356.198,-368.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="426.008" y="-353.3">[(None, 8), (None, 5)]</text>
+<polyline fill="none" points="356.198,-346.5 495.819,-346.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="425.522" y="-331.3">(None, 13)</text>
+</g>
+<!-- 112542908200&#45;&gt;112543379584 -->
+<g class="edge" id="edge7"><title>112542908200-&gt;112543379584</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M244.559,-405.329C262.068,-395.589 283.011,-383.937 301.496,-373.653" fill="none" stroke="black"/>
+<polygon fill="black" points="303.31,-376.649 310.347,-368.729 299.907,-370.532 303.31,-376.649" stroke="black"/>
+</g>
+<!-- 112543214000&#45;&gt;112543379584 -->
+<g class="edge" id="edge8"><title>112543214000-&gt;112543379584</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M453.184,-405.329C435.552,-395.589 414.461,-383.937 395.846,-373.653" fill="none" stroke="black"/>
+<polygon fill="black" points="397.378,-370.501 386.933,-368.729 393.993,-376.628 397.378,-370.501" stroke="black"/>
+</g>
+<!-- 112539983768 -->
+<g class="node" id="node10"><title>112539983768</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="199.11,-243.5 199.11,-287.5 497.9,-287.5 497.9,-243.5 199.11,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="278.847" y="-261.3">FullyConnected-1: Dense</text>
+<polyline fill="none" points="358.583,-243.5 358.583,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="386.417" y="-272.3">input:</text>
+<polyline fill="none" points="358.583,-265.5 414.252,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="386.417" y="-250.3">output:</text>
+<polyline fill="none" points="414.252,-243.5 414.252,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="456.076" y="-272.3">(None, 13)</text>
+<polyline fill="none" points="414.252,-265.5 497.9,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="456.076" y="-250.3">(None, 100)</text>
+</g>
+<!-- 112543379584&#45;&gt;112539983768 -->
+<g class="edge" id="edge9"><title>112543379584-&gt;112539983768</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M348.505,-324.329C348.505,-316.183 348.505,-306.699 348.505,-297.797" fill="none" stroke="black"/>
+<polygon fill="black" points="352.005,-297.729 348.505,-287.729 345.005,-297.729 352.005,-297.729" stroke="black"/>
+</g>
+<!-- 112540865872 -->
+<g class="node" id="node11"><title>112540865872</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="199.11,-162.5 199.11,-206.5 497.9,-206.5 497.9,-162.5 199.11,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="278.847" y="-180.3">FullyConnected-2: Dense</text>
+<polyline fill="none" points="358.583,-162.5 358.583,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="386.417" y="-191.3">input:</text>
+<polyline fill="none" points="358.583,-184.5 414.252,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="386.417" y="-169.3">output:</text>
+<polyline fill="none" points="414.252,-162.5 414.252,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="456.076" y="-191.3">(None, 100)</text>
+<polyline fill="none" points="414.252,-184.5 497.9,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="456.076" y="-169.3">(None, 50)</text>
+</g>
+<!-- 112539983768&#45;&gt;112540865872 -->
+<g class="edge" id="edge10"><title>112539983768-&gt;112540865872</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M348.505,-243.329C348.505,-235.183 348.505,-225.699 348.505,-216.797" fill="none" stroke="black"/>
+<polygon fill="black" points="352.005,-216.729 348.505,-206.729 345.005,-216.729 352.005,-216.729" stroke="black"/>
+</g>
+<!-- 112541514944 -->
+<g class="node" id="node12"><title>112541514944</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="202.61,-81.5 202.61,-125.5 494.4,-125.5 494.4,-81.5 202.61,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="282.347" y="-99.3">FullyConnected-3: Dense</text>
+<polyline fill="none" points="362.083,-81.5 362.083,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="389.917" y="-110.3">input:</text>
+<polyline fill="none" points="362.083,-103.5 417.752,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="389.917" y="-88.3">output:</text>
+<polyline fill="none" points="417.752,-81.5 417.752,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="456.076" y="-110.3">(None, 50)</text>
+<polyline fill="none" points="417.752,-103.5 494.4,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="456.076" y="-88.3">(None, 20)</text>
+</g>
+<!-- 112540865872&#45;&gt;112541514944 -->
+<g class="edge" id="edge11"><title>112540865872-&gt;112541514944</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M348.505,-162.329C348.505,-154.183 348.505,-144.699 348.505,-135.797" fill="none" stroke="black"/>
+<polygon fill="black" points="352.005,-135.729 348.505,-125.729 345.005,-135.729 352.005,-135.729" stroke="black"/>
+</g>
+<!-- 112541513768 -->
+<g class="node" id="node13"><title>112541513768</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="223.61,-0.5 223.61,-44.5 473.4,-44.5 473.4,-0.5 223.61,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="282.347" y="-18.3">Activation: Dense</text>
+<polyline fill="none" points="341.083,-0.5 341.083,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="368.917" y="-29.3">input:</text>
+<polyline fill="none" points="341.083,-22.5 396.752,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="368.917" y="-7.3">output:</text>
+<polyline fill="none" points="396.752,-0.5 396.752,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="435.076" y="-29.3">(None, 20)</text>
+<polyline fill="none" points="396.752,-22.5 473.4,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="435.076" y="-7.3">(None, 1)</text>
+</g>
+<!-- 112541514944&#45;&gt;112541513768 -->
+<g class="edge" id="edge12"><title>112541514944-&gt;112541513768</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M348.505,-81.3294C348.505,-73.1826 348.505,-63.6991 348.505,-54.7971" fill="none" stroke="black"/>
+<polygon fill="black" points="352.005,-54.729 348.505,-44.729 345.005,-54.729 352.005,-54.729" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It should be noted that we use a different number of embeddings for user (3) and items (5)! These combine to form a vector of length (5+3 = 8), which is then fed into the neural network. We also add a dropout layer to prevent overfitting!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[82]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+Item (InputLayer)               (None, 1)            0                                            
+__________________________________________________________________________________________________
+User (InputLayer)               (None, 1)            0                                            
+__________________________________________________________________________________________________
+Movie-Embedding (Embedding)     (None, 1, 8)         13464       Item[0][0]                       
+__________________________________________________________________________________________________
+User-Embedding (Embedding)      (None, 1, 5)         4720        User[0][0]                       
+__________________________________________________________________________________________________
+FlattenMovies (Flatten)         (None, 8)            0           Movie-Embedding[0][0]            
+__________________________________________________________________________________________________
+FlattenUsers (Flatten)          (None, 5)            0           User-Embedding[0][0]             
+__________________________________________________________________________________________________
+dropout_43 (Dropout)            (None, 8)            0           FlattenMovies[0][0]              
+__________________________________________________________________________________________________
+dropout_44 (Dropout)            (None, 5)            0           FlattenUsers[0][0]               
+__________________________________________________________________________________________________
+Concat (Merge)                  (None, 13)           0           dropout_43[0][0]                 
+                                                                 dropout_44[0][0]                 
+__________________________________________________________________________________________________
+FullyConnected-1 (Dense)        (None, 100)          1400        Concat[0][0]                     
+__________________________________________________________________________________________________
+FullyConnected-2 (Dense)        (None, 50)           5050        FullyConnected-1[0][0]           
+__________________________________________________________________________________________________
+FullyConnected-3 (Dense)        (None, 20)           1020        FullyConnected-2[0][0]           
+__________________________________________________________________________________________________
+Activation (Dense)              (None, 1)            21          FullyConnected-3[0][0]           
+==================================================================================================
+Total params: 25,675
+Trainable params: 25,675
+Non-trainable params: 0
+__________________________________________________________________________________________________
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see that the number of parameters is more than what we had in the Matrix Factorisation case. Let's see how this model works. I'll run it for more epochs given that we have more parameters.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[88]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">train</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">train</span><span class="o">.</span><span class="n">item_id</span><span class="p">],</span> <span class="n">train</span><span class="o">.</span><span class="n">rating</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Epoch 1/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6759
+Epoch 2/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6794
+Epoch 3/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6791
+Epoch 4/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6741
+Epoch 5/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6770
+Epoch 6/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6769
+Epoch 7/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6751
+Epoch 8/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6788
+Epoch 9/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6778
+Epoch 10/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6753
+Epoch 11/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6764
+Epoch 12/250
+80000/80000 [==============================] - 4s 52us/step - loss: 0.6765
+Epoch 13/250
+80000/80000 [==============================] - 5s 60us/step - loss: 0.6771
+Epoch 14/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6757
+Epoch 15/250
+80000/80000 [==============================] - 4s 52us/step - loss: 0.6760
+Epoch 16/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6763
+Epoch 17/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6760
+Epoch 18/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6772
+Epoch 19/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6757
+Epoch 20/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6724
+Epoch 21/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6755
+Epoch 22/250
+80000/80000 [==============================] - 4s 50us/step - loss: 0.6747
+Epoch 23/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6748
+Epoch 24/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6726
+Epoch 25/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6764
+Epoch 26/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6748
+Epoch 27/250
+80000/80000 [==============================] - 4s 53us/step - loss: 0.6778
+Epoch 28/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6759
+Epoch 29/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6776
+Epoch 30/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6739
+Epoch 31/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6754
+Epoch 32/250
+80000/80000 [==============================] - 4s 50us/step - loss: 0.6748
+Epoch 33/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6750
+Epoch 34/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6741
+Epoch 35/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6744
+Epoch 36/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6724
+Epoch 37/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6746
+Epoch 38/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6748
+Epoch 39/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6735
+Epoch 40/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6758
+Epoch 41/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6756
+Epoch 42/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6733
+Epoch 43/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6748
+Epoch 44/250
+80000/80000 [==============================] - 4s 54us/step - loss: 0.6739
+Epoch 45/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6754
+Epoch 46/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6736
+Epoch 47/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6760
+Epoch 48/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6743
+Epoch 49/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6754
+Epoch 50/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6734
+Epoch 51/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6759
+Epoch 52/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6763
+Epoch 53/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6733
+Epoch 54/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6741
+Epoch 55/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6750
+Epoch 56/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6726
+Epoch 57/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6723
+Epoch 58/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6719
+Epoch 59/250
+80000/80000 [==============================] - 4s 48us/step - loss: 0.6748
+Epoch 60/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6746
+Epoch 61/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6734
+Epoch 62/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6725
+Epoch 63/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6727
+Epoch 64/250
+80000/80000 [==============================] - 4s 52us/step - loss: 0.6724
+Epoch 65/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6740
+Epoch 66/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6730
+Epoch 67/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6742
+Epoch 68/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6744
+Epoch 69/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6735
+Epoch 70/250
+80000/80000 [==============================] - 4s 44us/step - loss: 0.6735
+Epoch 71/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6727
+Epoch 72/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6723
+Epoch 73/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6701
+Epoch 74/250
+80000/80000 [==============================] - 4s 50us/step - loss: 0.6728
+Epoch 75/250
+80000/80000 [==============================] - 4s 54us/step - loss: 0.6709
+Epoch 76/250
+80000/80000 [==============================] - 4s 47us/step - loss: 0.6737
+Epoch 77/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6727
+Epoch 78/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6723
+Epoch 79/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6734
+Epoch 80/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6721
+Epoch 81/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6736
+Epoch 82/250
+80000/80000 [==============================] - 4s 45us/step - loss: 0.6730
+Epoch 83/250
+80000/80000 [==============================] - 4s 46us/step - loss: 0.6730
+Epoch 84/250
+80000/80000 [==============================] - 4s 49us/step - loss: 0.6706
+Epoch 85/250
+64544/80000 [=======================&gt;......] - ETA: 0s - loss: 0.6710</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">KeyboardInterrupt</span>                         Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-88-cd439fe8336d&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>history <span class="ansi-blue-fg">=</span> model<span class="ansi-blue-fg">.</span>fit<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">[</span>train<span class="ansi-blue-fg">.</span>user_id<span class="ansi-blue-fg">,</span> train<span class="ansi-blue-fg">.</span>item_id<span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span> train<span class="ansi-blue-fg">.</span>rating<span class="ansi-blue-fg">,</span> epochs<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">250</span><span class="ansi-blue-fg">,</span> verbose<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">fit</span><span class="ansi-blue-fg">(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1655</span>                               initial_epoch<span class="ansi-blue-fg">=</span>initial_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">   1656</span>                               steps_per_epoch<span class="ansi-blue-fg">=</span>steps_per_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1657</span><span class="ansi-red-fg">                               validation_steps=validation_steps)
+</span><span class="ansi-green-intense-fg ansi-bold">   1658</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1659</span>     def evaluate(self, x=None, y=None,
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">_fit_loop</span><span class="ansi-blue-fg">(self, f, ins, out_labels, batch_size, epochs, verbose, callbacks, val_f, val_ins, shuffle, callback_metrics, initial_epoch, steps_per_epoch, validation_steps)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1211</span>                     batch_logs<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#39;size&#39;</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> len<span class="ansi-blue-fg">(</span>batch_ids<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1212</span>                     callbacks<span class="ansi-blue-fg">.</span>on_batch_begin<span class="ansi-blue-fg">(</span>batch_index<span class="ansi-blue-fg">,</span> batch_logs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">-&gt; 1213</span><span class="ansi-red-fg">                     </span>outs <span class="ansi-blue-fg">=</span> f<span class="ansi-blue-fg">(</span>ins_batch<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1214</span>                     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> isinstance<span class="ansi-blue-fg">(</span>outs<span class="ansi-blue-fg">,</span> list<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1215</span>                         outs <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span>outs<span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py</span> in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, inputs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2355</span>         session <span class="ansi-blue-fg">=</span> get_session<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2356</span>         updated = session.run(fetches=fetches, feed_dict=feed_dict,
+<span class="ansi-green-fg">-&gt; 2357</span><span class="ansi-red-fg">                               **self.session_kwargs)
+</span><span class="ansi-green-intense-fg ansi-bold">   2358</span>         <span class="ansi-green-fg">return</span> updated<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span>len<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>outputs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">]</span>
+<span class="ansi-green-intense-fg ansi-bold">   2359</span> 
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">run</span><span class="ansi-blue-fg">(self, fetches, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">    887</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    888</span>       result = self._run(None, fetches, feed_dict, options_ptr,
+<span class="ansi-green-fg">--&gt; 889</span><span class="ansi-red-fg">                          run_metadata_ptr)
+</span><span class="ansi-green-intense-fg ansi-bold">    890</span>       <span class="ansi-green-fg">if</span> run_metadata<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    891</span>         proto_data <span class="ansi-blue-fg">=</span> tf_session<span class="ansi-blue-fg">.</span>TF_GetBuffer<span class="ansi-blue-fg">(</span>run_metadata_ptr<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_run</span><span class="ansi-blue-fg">(self, handle, fetches, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1118</span>     <span class="ansi-green-fg">if</span> final_fetches <span class="ansi-green-fg">or</span> final_targets <span class="ansi-green-fg">or</span> <span class="ansi-blue-fg">(</span>handle <span class="ansi-green-fg">and</span> feed_dict_tensor<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1119</span>       results = self._do_run(handle, final_targets, final_fetches,
+<span class="ansi-green-fg">-&gt; 1120</span><span class="ansi-red-fg">                              feed_dict_tensor, options, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1121</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1122</span>       results <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_do_run</span><span class="ansi-blue-fg">(self, handle, target_list, fetch_list, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1315</span>     <span class="ansi-green-fg">if</span> handle <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1316</span>       return self._do_call(_run_fn, self._session, feeds, fetches, targets,
+<span class="ansi-green-fg">-&gt; 1317</span><span class="ansi-red-fg">                            options, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1318</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1319</span>       <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_do_call<span class="ansi-blue-fg">(</span>_prun_fn<span class="ansi-blue-fg">,</span> self<span class="ansi-blue-fg">.</span>_session<span class="ansi-blue-fg">,</span> handle<span class="ansi-blue-fg">,</span> feeds<span class="ansi-blue-fg">,</span> fetches<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_do_call</span><span class="ansi-blue-fg">(self, fn, *args)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1321</span>   <span class="ansi-green-fg">def</span> _do_call<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> fn<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1322</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1323</span><span class="ansi-red-fg">       </span><span class="ansi-green-fg">return</span> fn<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1324</span>     <span class="ansi-green-fg">except</span> errors<span class="ansi-blue-fg">.</span>OpError <span class="ansi-green-fg">as</span> e<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1325</span>       message <span class="ansi-blue-fg">=</span> compat<span class="ansi-blue-fg">.</span>as_text<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">.</span>message<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_run_fn</span><span class="ansi-blue-fg">(session, feed_dict, fetch_list, target_list, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1300</span>           return tf_session.TF_Run(session, options,
+<span class="ansi-green-intense-fg ansi-bold">   1301</span>                                    feed_dict<span class="ansi-blue-fg">,</span> fetch_list<span class="ansi-blue-fg">,</span> target_list<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1302</span><span class="ansi-red-fg">                                    status, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1303</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1304</span>     <span class="ansi-green-fg">def</span> _prun_fn<span class="ansi-blue-fg">(</span>session<span class="ansi-blue-fg">,</span> handle<span class="ansi-blue-fg">,</span> feed_dict<span class="ansi-blue-fg">,</span> fetch_list<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">KeyboardInterrupt</span>: </pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Prediction-performance-of-Neural-Network-based-recommender-system">Prediction performance of Neural Network based recommender system<a class="anchor-link" href="#Prediction-performance-of-Neural-Network-based-recommender-system">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[89]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_hat_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">test</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">item_id</span><span class="p">]),</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_hat_2</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">test</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">item_id</span><span class="p">])))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0.6993
+0.715507672799
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Pretty similar to the result we got using matrix factorisation. Maybe, we need to tweak around a lot more with the neural network to get better results?</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Thanks for reading. This post has been a good learning experience for me. Hope you enjoyed too!</p>
+
+</div>
+</div>
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

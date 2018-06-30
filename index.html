@@ -1,60 +1,96 @@
----
-layout: default
-styles: [article-list.css]
----
+<!DOCTYPE HTML>
+<!--
+	Miniport by HTML5 UP
+	html5up.net | @n33co
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
 
-<div class="row index">
-  <div class="col-sm-10 col-sm-offset-1 col-lg-9 col-lg-offset-1_5">
-      <div>
-        <section class="category-slice" post-cate="All">
-          {% for post in paginator.posts %}
-            <article>
-                <header>
-                    <a href="{{ site.baseurl | prepend: site.url  }}/archive/#{{ post.date | date: '%Y-%m-%d' }}"><span class="octicon octicon-calendar"></span>&nbsp;<span>{{ post.date | date: "%Y-%m-%d" }}</span></a>
-                </header>
-                <div class="module">
-                  <a class="title" href="{{ post.url | prepend: site.baseurl | prepend: site.url }}">
-                      {{ post.title }}
-                  </a>
-                  <p>{% if post.excerpt.size > 32 %}{{ post.excerpt }}{% else %}{{ post.content | strip_html | strip_newlines | truncate: 160 }}{% endif %}</p>
-                  <a class="readmore" href="{{ post.url | prepend: site.baseurl | prepend: site.url }}">Read More</a>
-                  <footer>
-                      {% for tag in post.tags %}
-                      <a class="word-keep" href="{{ site.baseurl | prepend: site.url }}/tags/#{{ tag }}"><span class="octicon octicon-tag"></span>&nbsp;{{ tag }}</a>
-                      {% endfor %}
-                      <span class="word-keep pull-right">
-                          <a href="{{ post.url | prepend: site.baseurl | prepend: site.url }}#post-comment"><span class="octicon octicon-comment"></span>&nbsp;Comment</a>
-                          <a href="{{ post.url | prepend: site.baseurl | prepend: site.url }}#post-share"><span class="octicon octicon-file-symlink-file"></span>&nbsp;Share</a>
-                      </span>
-                  </footer>
-                </div>
-            </article>
-          {% endfor %}
-        </section>
+<head>
+    <title>Nipun Batra</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/nipun-custom.css" />
+    <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
 
-          <div class="pad-mid"></div>
+    <!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+    <!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
 
-          <nav class="text-center">
-              <ul class="pagination">
-                {% if paginator.total_pages > 1 %}
-                  {% if paginator.previous_page %}
-                        <li><a href="{{ paginator.previous_page_path | prepend: site.baseurl | prepend: site.url }}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
-                  {% endif %}
-                  {% for page in (1..paginator.total_pages) %}
-                      {% if page == paginator.page %}
-                        <li class="active"><span>{{ page }}</span></li>
-                      {% elsif page == 1 %}
-                        <li><a href="{{ '/' | prepend: site.baseurl | prepend: site.url  }}">{{ page }}</a></li>
-                      {% else %}
-                        <li><a href="{{ page |  prepend: '/' | prepend: site.baseurl | prepend: site.url }}">{{ page }}</a></li>
-                      {% endif %}
-                  {% endfor %}
-                  {% if !paginator.next_page %}
-                        <li><a href="{{ paginator.next_page_path | prepend: site.baseurl | prepend: site.url }}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
-                  {% endif %}
-                {% endif %}
-              </ul>
-          </nav>
-      </div>
-  </div>
-</div>
+</head>
+
+<body>
+
+
+
+    <nav class="navbar navbar-default">
+        <div class="container text-center">
+
+            <div id="navbar" class="navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="publications.html">Publications</a></li>
+                    <li><a href="blog/index.html">Blog</a></li>
+                    <li><a href="files/cv.pdf">CV</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4">
+                <img class="img-rounded center-block" src="images/nipun_4.jpg" style="width:80%; margin:0 auto;" alt="">
+            </div>
+            <div class="col-sm-8">
+
+                <p style="font-weight:100;font-size:25px">Starting July 2018, I'm an Assistant Professor in <a href="https://cs.iitgn.ac.in">CS department</a> at <a href="https://www.iitgn.ac.in">IIT Gandhinagar</a>. Prior to that I was a postdoctoral researcher at University of Virginia working with Kamin Whitehouse and Hongning Wang. I completed my PhD. from <a href="http://www.iiitd.ac.in">IIIT Delhi</a> advised by <a href="https://www.iiitd.edu.in/~amarjeet/">Amarjeet Singh</a> and <a href="https://www.iiitd.edu.in/~pushpendra/">Pushpendra Singh</a> (both IIIT Delhi) and <a href="http://www.cs.virginia.edu/~whitehouse/">Kamin Whitehouse</a> (<a href="http://www.virginia.edu">University of Virginia</a>). I broadly work on computational sustainability problems. My <a href="files/rs.pdf">research statement</a> would give you a flavour of my work.
+        
+                </p>
+                <p style="font-weight:100;font-size:25px">
+                Links:  <a href="https://scholar.google.co.in/citations?user=rFGzHlIAAAAJ&hl=en">Google scholar profile</a>, , <a href="files/ts.pdf">Teaching Statement</a>
+                </p>
+                <h3>Contact: nipunbatra0@gmail.com<br/></h3>
+                <a href="https://twitter.com/nipun_batra" class="btn btn-info" role="button"> <i class="fa fa-twitter fa-2x" aria-hidden="true"></i></a>
+                <a href="https://in.linkedin.com/pub/nipun-batra/12/883/865" class="btn btn-info" role="button"> <i class="fa fa-linkedin fa-2x" aria-hidden="true"></i></a>
+                <a href="https://plus.google.com/+NipunBatra0/about" class="btn btn-info" role="button"> <i class="fa fa-google fa-2x" aria-hidden="true"></i></a>
+                <a href="https://github.com/nipunbatra/" class="btn btn-info" role="button"> <i class="fa fa-github fa-2x" aria-hidden="true"></i></a>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/skel.min.js"></script>
+    <script src="assets/js/skel-viewport.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+    <script src="assets/js/main.js"></script>
+    <script>
+        (function(i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function() {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-96903131-1', 'auto');
+        ga('send', 'pageview');
+
+    </script>
+
+</body>
+
+</html>

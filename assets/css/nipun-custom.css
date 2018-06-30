@@ -1,0 +1,68 @@
+th,
+td {
+    padding: 8px;
+}
+
+tr:hover {
+    background-color: #f5f5f5
+}
+
+img {
+    max-width: 100%
+}
+
+body {
+    font-family: "News Cycle", "Arial Narrow Bold", sans-serif;
+    font-size: 21px;
+    line-height: 1.42857143;
+    color: #777777;
+    background-color: #ffffff
+}
+
+div.cell {
+    padding: 4px
+}
+
+pre {
+    font-size: 15px;
+}
+
+div.input_prompt {
+    color: firebrick;
+}
+
+div.output_prompt {
+    color: firebrick;
+}
+
+.navbar {
+    font-size: 27px;
+    font-family: "News Cycle", "Arial Narrow Bold", sans-serif;
+    font-weight: 500;
+}
+
+a.anchor-link:link {
+    text-decoration: none;
+    padding: 0 20px;
+    visibility: hidden
+}
+
+h1:hover .anchor-link,
+h2:hover .anchor-link,
+h3:hover .anchor-link,
+h4:hover .anchor-link,
+h5:hover .anchor-link,
+h6:hover .anchor-link {
+    visibility: visible
+}
+
+.text_cell.rendered h1,
+h2,
+h3,
+h4 {
+    font-weight: 100
+}
+
+.paper_title {
+    font-size: 24px;
+}

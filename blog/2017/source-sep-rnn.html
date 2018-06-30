@@ -1,0 +1,1898 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Nipun Batra</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">gen_sequence</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">length</span> <span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+    <span class="n">sequence</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="n">random_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">random_num</span> <span class="o">&gt;</span> <span class="n">p</span><span class="p">:</span>
+            <span class="c1"># Switch state</span>
+            <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">sequence</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">source_1_range</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span>
+<span class="n">source_2_range</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1300</span><span class="p">]</span>
+
+<span class="n">sequence_length</span> <span class="o">=</span> <span class="mi">48</span>
+<span class="n">num_sequences</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="n">seq1</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">seq2</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_sequences</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">seq</span> <span class="o">%</span> <span class="p">(</span><span class="n">num_sequences</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+    <span class="n">source_1_power_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">source_1_range</span><span class="p">)))</span>
+    <span class="n">source_2_power_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">source_2_range</span><span class="p">)))</span>
+    
+    <span class="n">source_1_seq</span> <span class="o">=</span> <span class="n">source_1_power_val</span><span class="o">*</span><span class="n">gen_sequence</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">length</span> <span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+    <span class="n">source_2_seq</span> <span class="o">=</span> <span class="n">source_2_power_val</span><span class="o">*</span><span class="n">gen_sequence</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">length</span> <span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+    <span class="n">combined_seq</span> <span class="o">=</span> <span class="n">source_1_seq</span> <span class="o">+</span> <span class="n">source_2_seq</span>
+    <span class="n">seq1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_1_seq</span><span class="p">)</span>
+    <span class="n">seq2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_2_seq</span><span class="p">)</span>
+    <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combined_seq</span><span class="p">)</span>
+
+<span class="n">combined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+<span class="n">seq1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span>
+<span class="n">seq2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seq2</span><span class="p">)</span>
+
+<span class="c1">#seq1 = seq1.reshape(num_sequences, sequence_length, 1)</span>
+<span class="c1">#seq2 = seq2.reshape(num_sequences, sequence_length, 1)</span>
+<span class="c1">#combined = combined.reshape(num_sequences, sequence_length, 1)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0
+100
+200
+300
+400
+500
+600
+700
+800
+900
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">combined</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">seq1</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[28]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>((1000, 48), (1000, 48))</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">seq1</span> <span class="o">=</span> <span class="n">seq1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_sequences</span><span class="p">,</span> <span class="n">sequence_length</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Conv1D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">MaxPool1D</span><span class="p">,</span> <span class="n">InputLayer</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">MaxPooling1D</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">InputLayer</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">sequence_length</span><span class="p">,)))</span>
+
+
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">sequence_length</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">sequence_length</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+
+
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+
+
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_3 (InputLayer)         (None, 48)                0         
+_________________________________________________________________
+dense_3 (Dense)              (None, 48)                2352      
+_________________________________________________________________
+dense_4 (Dense)              (None, 48)                2352      
+_________________________________________________________________
+dropout_2 (Dropout)          (None, 48)                0         
+=================================================================
+Total params: 4,704
+Trainable params: 4,704
+Non-trainable params: 0
+_________________________________________________________________
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">SVG</span>
+<span class="kn">from</span> <span class="nn">keras.utils.vis_utils</span> <span class="k">import</span> <span class="n">model_to_dot</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>  <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_layer_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rankdir</span><span class="o">=</span><span class="s1">&#39;HB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[25]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="296pt" viewBox="0.00 0.00 268.68 296.00" width="269pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 292)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-292 264.68,-292 264.68,4 -4,4" stroke="none"/>
+<!-- 103720883760 -->
+<g class="node" id="node1"><title>103720883760</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-243.5 0,-287.5 260.68,-287.5 260.68,-243.5 0,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="64.1812" y="-261.3">input_3: InputLayer</text>
+<polyline fill="none" points="128.362,-243.5 128.362,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="156.197" y="-272.3">input:</text>
+<polyline fill="none" points="128.362,-265.5 184.031,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="156.197" y="-250.3">output:</text>
+<polyline fill="none" points="184.031,-243.5 184.031,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="222.355" y="-272.3">(None, 48)</text>
+<polyline fill="none" points="184.031,-265.5 260.68,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="222.355" y="-250.3">(None, 48)</text>
+</g>
+<!-- 103720884320 -->
+<g class="node" id="node2"><title>103720884320</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="12.0552,-162.5 12.0552,-206.5 248.625,-206.5 248.625,-162.5 12.0552,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="64.1812" y="-180.3">dense_3: Dense</text>
+<polyline fill="none" points="116.307,-162.5 116.307,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="144.142" y="-191.3">input:</text>
+<polyline fill="none" points="116.307,-184.5 171.976,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="144.142" y="-169.3">output:</text>
+<polyline fill="none" points="171.976,-162.5 171.976,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.3" y="-191.3">(None, 48)</text>
+<polyline fill="none" points="171.976,-184.5 248.625,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.3" y="-169.3">(None, 48)</text>
+</g>
+<!-- 103720883760&#45;&gt;103720884320 -->
+<g class="edge" id="edge1"><title>103720883760-&gt;103720884320</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M130.34,-243.329C130.34,-235.183 130.34,-225.699 130.34,-216.797" fill="none" stroke="black"/>
+<polygon fill="black" points="133.84,-216.729 130.34,-206.729 126.84,-216.729 133.84,-216.729" stroke="black"/>
+</g>
+<!-- 103720884544 -->
+<g class="node" id="node3"><title>103720884544</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="12.0552,-81.5 12.0552,-125.5 248.625,-125.5 248.625,-81.5 12.0552,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="64.1812" y="-99.3">dense_4: Dense</text>
+<polyline fill="none" points="116.307,-81.5 116.307,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="144.142" y="-110.3">input:</text>
+<polyline fill="none" points="116.307,-103.5 171.976,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="144.142" y="-88.3">output:</text>
+<polyline fill="none" points="171.976,-81.5 171.976,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.3" y="-110.3">(None, 48)</text>
+<polyline fill="none" points="171.976,-103.5 248.625,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.3" y="-88.3">(None, 48)</text>
+</g>
+<!-- 103720884320&#45;&gt;103720884544 -->
+<g class="edge" id="edge2"><title>103720884320-&gt;103720884544</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M130.34,-162.329C130.34,-154.183 130.34,-144.699 130.34,-135.797" fill="none" stroke="black"/>
+<polygon fill="black" points="133.84,-135.729 130.34,-125.729 126.84,-135.729 133.84,-135.729" stroke="black"/>
+</g>
+<!-- 103720884152 -->
+<g class="node" id="node4"><title>103720884152</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0.379395,-0.5 0.379395,-44.5 260.3,-44.5 260.3,-0.5 0.379395,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="64.1812" y="-18.3">dropout_2: Dropout</text>
+<polyline fill="none" points="127.983,-0.5 127.983,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="155.817" y="-29.3">input:</text>
+<polyline fill="none" points="127.983,-22.5 183.652,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="155.817" y="-7.3">output:</text>
+<polyline fill="none" points="183.652,-0.5 183.652,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.976" y="-29.3">(None, 48)</text>
+<polyline fill="none" points="183.652,-22.5 260.3,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="221.976" y="-7.3">(None, 48)</text>
+</g>
+<!-- 103720884544&#45;&gt;103720884152 -->
+<g class="edge" id="edge3"><title>103720884544-&gt;103720884152</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M130.34,-81.3294C130.34,-73.1826 130.34,-63.6991 130.34,-54.7971" fill="none" stroke="black"/>
+<polygon fill="black" points="133.84,-54.729 130.34,-44.729 126.84,-54.729 133.84,-54.729" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[31]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">combined</span><span class="p">[:</span><span class="mi">800</span><span class="p">],</span> <span class="n">seq1</span><span class="p">[:</span><span class="mi">800</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train on 720 samples, validate on 80 samples
+Epoch 1/1500
+720/720 [==============================] - 0s 58us/step - loss: 34.1550 - val_loss: 67.6305
+Epoch 2/1500
+720/720 [==============================] - 0s 47us/step - loss: 34.3309 - val_loss: 68.2056
+Epoch 3/1500
+720/720 [==============================] - 0s 52us/step - loss: 34.0228 - val_loss: 69.4131
+Epoch 4/1500
+720/720 [==============================] - 0s 87us/step - loss: 33.3299 - val_loss: 69.3883
+Epoch 5/1500
+720/720 [==============================] - 0s 78us/step - loss: 33.5856 - val_loss: 68.6971
+Epoch 6/1500
+720/720 [==============================] - 0s 87us/step - loss: 33.8712 - val_loss: 68.6377
+Epoch 7/1500
+720/720 [==============================] - 0s 66us/step - loss: 34.3130 - val_loss: 70.1241
+Epoch 8/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.9830 - val_loss: 68.4149
+Epoch 9/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.2324 - val_loss: 68.9505
+Epoch 10/1500
+720/720 [==============================] - 0s 72us/step - loss: 33.5826 - val_loss: 69.3333
+Epoch 11/1500
+720/720 [==============================] - 0s 69us/step - loss: 33.4612 - val_loss: 69.2546
+Epoch 12/1500
+720/720 [==============================] - 0s 95us/step - loss: 33.3799 - val_loss: 69.3348
+Epoch 13/1500
+720/720 [==============================] - 0s 69us/step - loss: 33.5185 - val_loss: 69.7713
+Epoch 14/1500
+720/720 [==============================] - 0s 62us/step - loss: 34.1730 - val_loss: 69.4643
+Epoch 15/1500
+720/720 [==============================] - 0s 75us/step - loss: 34.7177 - val_loss: 70.4733
+Epoch 16/1500
+720/720 [==============================] - 0s 75us/step - loss: 34.1941 - val_loss: 68.7341
+Epoch 17/1500
+720/720 [==============================] - 0s 77us/step - loss: 33.7264 - val_loss: 69.0500
+Epoch 18/1500
+720/720 [==============================] - 0s 195us/step - loss: 34.0197 - val_loss: 69.3309
+Epoch 19/1500
+720/720 [==============================] - 0s 134us/step - loss: 33.6478 - val_loss: 68.2389
+Epoch 20/1500
+720/720 [==============================] - 0s 94us/step - loss: 33.5750 - val_loss: 69.3168
+Epoch 21/1500
+720/720 [==============================] - 0s 73us/step - loss: 34.0784 - val_loss: 70.1262
+Epoch 22/1500
+720/720 [==============================] - 0s 60us/step - loss: 33.7473 - val_loss: 68.7457
+Epoch 23/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.6576 - val_loss: 68.1361
+Epoch 24/1500
+720/720 [==============================] - 0s 73us/step - loss: 33.2091 - val_loss: 69.1515
+Epoch 25/1500
+720/720 [==============================] - 0s 95us/step - loss: 33.6739 - val_loss: 68.4545
+Epoch 26/1500
+720/720 [==============================] - 0s 63us/step - loss: 33.9391 - val_loss: 68.8680
+Epoch 27/1500
+720/720 [==============================] - 0s 63us/step - loss: 33.8355 - val_loss: 69.9104
+Epoch 28/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.9995 - val_loss: 67.6229
+Epoch 29/1500
+720/720 [==============================] - 0s 63us/step - loss: 33.7213 - val_loss: 67.9806
+Epoch 30/1500
+720/720 [==============================] - 0s 110us/step - loss: 33.9080 - val_loss: 69.8438
+Epoch 31/1500
+720/720 [==============================] - 0s 81us/step - loss: 33.5786 - val_loss: 70.0219
+Epoch 32/1500
+720/720 [==============================] - 0s 98us/step - loss: 33.8021 - val_loss: 68.2108
+Epoch 33/1500
+720/720 [==============================] - 0s 80us/step - loss: 33.4055 - val_loss: 69.2970
+Epoch 34/1500
+720/720 [==============================] - 0s 76us/step - loss: 33.4033 - val_loss: 69.0849
+Epoch 35/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.3186 - val_loss: 69.0865
+Epoch 36/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.6742 - val_loss: 68.6296
+Epoch 37/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.1745 - val_loss: 68.8137
+Epoch 38/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.4448 - val_loss: 68.2230
+Epoch 39/1500
+720/720 [==============================] - 0s 87us/step - loss: 33.6046 - val_loss: 69.5582
+Epoch 40/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.5279 - val_loss: 69.6722
+Epoch 41/1500
+720/720 [==============================] - 0s 56us/step - loss: 33.9969 - val_loss: 68.1379
+Epoch 42/1500
+720/720 [==============================] - 0s 55us/step - loss: 34.2575 - val_loss: 70.2123
+Epoch 43/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.7261 - val_loss: 68.3593
+Epoch 44/1500
+720/720 [==============================] - 0s 56us/step - loss: 33.6848 - val_loss: 67.8716
+Epoch 45/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.3745 - val_loss: 69.6735
+Epoch 46/1500
+720/720 [==============================] - 0s 54us/step - loss: 33.9254 - val_loss: 69.6247
+Epoch 47/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.7644 - val_loss: 69.1523
+Epoch 48/1500
+720/720 [==============================] - 0s 58us/step - loss: 33.0547 - val_loss: 69.5908
+Epoch 49/1500
+720/720 [==============================] - 0s 90us/step - loss: 33.3112 - val_loss: 69.4519
+Epoch 50/1500
+720/720 [==============================] - 0s 83us/step - loss: 33.3088 - val_loss: 69.2683
+Epoch 51/1500
+720/720 [==============================] - 0s 69us/step - loss: 33.0165 - val_loss: 69.2162
+Epoch 52/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.2762 - val_loss: 69.1190
+Epoch 53/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.2226 - val_loss: 69.6039
+Epoch 54/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.0339 - val_loss: 69.6554
+Epoch 55/1500
+720/720 [==============================] - 0s 61us/step - loss: 32.8924 - val_loss: 69.2223
+Epoch 56/1500
+720/720 [==============================] - 0s 55us/step - loss: 32.8538 - val_loss: 69.7000
+Epoch 57/1500
+720/720 [==============================] - 0s 53us/step - loss: 33.2012 - val_loss: 68.5981
+Epoch 58/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.5478 - val_loss: 70.7518
+Epoch 59/1500
+720/720 [==============================] - 0s 48us/step - loss: 34.4425 - val_loss: 69.3873
+Epoch 60/1500
+720/720 [==============================] - ETA: 0s - loss: 35.94 - 0s 50us/step - loss: 34.2266 - val_loss: 68.4354
+Epoch 61/1500
+720/720 [==============================] - 0s 62us/step - loss: 34.2483 - val_loss: 70.2345
+Epoch 62/1500
+720/720 [==============================] - 0s 51us/step - loss: 33.4870 - val_loss: 70.0123
+Epoch 63/1500
+720/720 [==============================] - 0s 50us/step - loss: 34.1815 - val_loss: 67.9627
+Epoch 64/1500
+720/720 [==============================] - 0s 49us/step - loss: 34.3144 - val_loss: 70.7965
+Epoch 65/1500
+720/720 [==============================] - 0s 56us/step - loss: 33.9126 - val_loss: 69.8234
+Epoch 66/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.7992 - val_loss: 70.4894
+Epoch 67/1500
+720/720 [==============================] - ETA: 0s - loss: 34.38 - 0s 97us/step - loss: 34.1845 - val_loss: 70.9571
+Epoch 68/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.4011 - val_loss: 70.4863
+Epoch 69/1500
+720/720 [==============================] - 0s 53us/step - loss: 33.5489 - val_loss: 70.4399
+Epoch 70/1500
+720/720 [==============================] - 0s 56us/step - loss: 34.2791 - val_loss: 68.4010
+Epoch 71/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.7539 - val_loss: 69.0504
+Epoch 72/1500
+720/720 [==============================] - 0s 96us/step - loss: 33.4385 - val_loss: 69.3660
+Epoch 73/1500
+720/720 [==============================] - 0s 79us/step - loss: 33.5435 - val_loss: 68.4100
+Epoch 74/1500
+720/720 [==============================] - 0s 56us/step - loss: 33.4886 - val_loss: 69.5439
+Epoch 75/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.1198 - val_loss: 68.7687
+Epoch 76/1500
+720/720 [==============================] - 0s 58us/step - loss: 33.0797 - val_loss: 68.1920
+Epoch 77/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.1936 - val_loss: 69.2334
+Epoch 78/1500
+720/720 [==============================] - 0s 54us/step - loss: 33.4272 - val_loss: 69.0806
+Epoch 79/1500
+720/720 [==============================] - 0s 50us/step - loss: 33.4222 - val_loss: 69.6849
+Epoch 80/1500
+720/720 [==============================] - 0s 51us/step - loss: 33.4189 - val_loss: 69.7739
+Epoch 81/1500
+720/720 [==============================] - 0s 46us/step - loss: 33.5679 - val_loss: 69.1301
+Epoch 82/1500
+720/720 [==============================] - 0s 49us/step - loss: 33.7291 - val_loss: 69.9990
+Epoch 83/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.7017 - val_loss: 68.6776
+Epoch 84/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.6713 - val_loss: 69.0915
+Epoch 85/1500
+720/720 [==============================] - 0s 77us/step - loss: 33.5103 - val_loss: 70.0502
+Epoch 86/1500
+720/720 [==============================] - 0s 64us/step - loss: 34.3030 - val_loss: 68.3699
+Epoch 87/1500
+720/720 [==============================] - 0s 60us/step - loss: 33.6202 - val_loss: 69.9650
+Epoch 88/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.2476 - val_loss: 69.8276
+Epoch 89/1500
+720/720 [==============================] - ETA: 0s - loss: 30.84 - 0s 81us/step - loss: 33.5799 - val_loss: 69.0164
+Epoch 90/1500
+720/720 [==============================] - 0s 62us/step - loss: 33.4377 - val_loss: 69.6788
+Epoch 91/1500
+720/720 [==============================] - 0s 67us/step - loss: 34.3076 - val_loss: 70.5321
+Epoch 92/1500
+720/720 [==============================] - 0s 77us/step - loss: 34.1887 - val_loss: 69.8300
+Epoch 93/1500
+720/720 [==============================] - 0s 60us/step - loss: 34.2450 - val_loss: 70.8076
+Epoch 94/1500
+720/720 [==============================] - 0s 75us/step - loss: 33.4785 - val_loss: 70.6527
+Epoch 95/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.6399 - val_loss: 69.2306
+Epoch 96/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.3603 - val_loss: 70.3857
+Epoch 97/1500
+720/720 [==============================] - 0s 59us/step - loss: 34.2904 - val_loss: 70.0822
+Epoch 98/1500
+720/720 [==============================] - 0s 75us/step - loss: 33.5835 - val_loss: 69.6605
+Epoch 99/1500
+720/720 [==============================] - 0s 66us/step - loss: 34.0124 - val_loss: 70.1634
+Epoch 100/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.4595 - val_loss: 69.2465
+Epoch 101/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.3860 - val_loss: 69.4439
+Epoch 102/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.6417 - val_loss: 69.7719
+Epoch 103/1500
+720/720 [==============================] - 0s 71us/step - loss: 34.0718 - val_loss: 72.0444
+Epoch 104/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.5606 - val_loss: 69.4513
+Epoch 105/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.3058 - val_loss: 71.3785
+Epoch 106/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.2542 - val_loss: 70.6533
+Epoch 107/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.4668 - val_loss: 70.0015
+Epoch 108/1500
+720/720 [==============================] - 0s 68us/step - loss: 32.7706 - val_loss: 69.9724
+Epoch 109/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.2160 - val_loss: 69.9400
+Epoch 110/1500
+720/720 [==============================] - 0s 60us/step - loss: 33.0213 - val_loss: 70.4619
+Epoch 111/1500
+720/720 [==============================] - 0s 51us/step - loss: 32.5948 - val_loss: 70.0774
+Epoch 112/1500
+720/720 [==============================] - 0s 51us/step - loss: 33.4811 - val_loss: 69.9595
+Epoch 113/1500
+720/720 [==============================] - 0s 77us/step - loss: 33.8221 - val_loss: 69.9249
+Epoch 114/1500
+720/720 [==============================] - 0s 78us/step - loss: 33.2534 - val_loss: 70.6271
+Epoch 115/1500
+720/720 [==============================] - 0s 70us/step - loss: 32.9482 - val_loss: 70.1306
+Epoch 116/1500
+720/720 [==============================] - 0s 63us/step - loss: 33.0962 - val_loss: 68.9838
+Epoch 117/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.1822 - val_loss: 69.5368
+Epoch 118/1500
+720/720 [==============================] - 0s 70us/step - loss: 34.0871 - val_loss: 69.9946
+Epoch 119/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.2154 - val_loss: 70.5223
+Epoch 120/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.3215 - val_loss: 68.8931
+Epoch 121/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.3699 - val_loss: 70.9811
+Epoch 122/1500
+720/720 [==============================] - 0s 62us/step - loss: 33.8930 - val_loss: 70.1448
+Epoch 123/1500
+720/720 [==============================] - 0s 62us/step - loss: 33.8148 - val_loss: 68.9825
+Epoch 124/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.2087 - val_loss: 71.6329
+Epoch 125/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.2117 - val_loss: 70.6403
+Epoch 126/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.3748 - val_loss: 70.1903
+Epoch 127/1500
+720/720 [==============================] - 0s 78us/step - loss: 34.1246 - val_loss: 69.7835
+Epoch 128/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.7250 - val_loss: 72.4919
+Epoch 129/1500
+720/720 [==============================] - 0s 75us/step - loss: 33.6649 - val_loss: 70.1735
+Epoch 130/1500
+720/720 [==============================] - 0s 95us/step - loss: 34.1263 - val_loss: 70.0719
+Epoch 131/1500
+720/720 [==============================] - 0s 80us/step - loss: 33.6084 - val_loss: 71.1397
+Epoch 132/1500
+720/720 [==============================] - 0s 95us/step - loss: 33.8123 - val_loss: 69.4059
+Epoch 133/1500
+720/720 [==============================] - 0s 83us/step - loss: 32.9261 - val_loss: 69.3928
+Epoch 134/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.4350 - val_loss: 70.8995
+Epoch 135/1500
+720/720 [==============================] - 0s 81us/step - loss: 33.0341 - val_loss: 69.5494
+Epoch 136/1500
+720/720 [==============================] - 0s 74us/step - loss: 34.0442 - val_loss: 70.0374
+Epoch 137/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.2681 - val_loss: 72.3578
+Epoch 138/1500
+720/720 [==============================] - 0s 77us/step - loss: 33.7973 - val_loss: 71.1664
+Epoch 139/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.1557 - val_loss: 69.9990
+Epoch 140/1500
+720/720 [==============================] - 0s 73us/step - loss: 33.4714 - val_loss: 69.4918
+Epoch 141/1500
+720/720 [==============================] - 0s 89us/step - loss: 34.0121 - val_loss: 70.0237
+Epoch 142/1500
+720/720 [==============================] - 0s 72us/step - loss: 33.4900 - val_loss: 70.4235
+Epoch 143/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.5194 - val_loss: 69.7545
+Epoch 144/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.3537 - val_loss: 71.3482
+Epoch 145/1500
+720/720 [==============================] - 0s 53us/step - loss: 33.4447 - val_loss: 70.1929
+Epoch 146/1500
+720/720 [==============================] - 0s 49us/step - loss: 33.3614 - val_loss: 70.7689
+Epoch 147/1500
+720/720 [==============================] - 0s 47us/step - loss: 33.0475 - val_loss: 69.7850
+Epoch 148/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.4439 - val_loss: 69.5966
+Epoch 149/1500
+720/720 [==============================] - 0s 59us/step - loss: 34.6037 - val_loss: 71.0665
+Epoch 150/1500
+720/720 [==============================] - 0s 73us/step - loss: 34.4151 - val_loss: 69.1374
+Epoch 151/1500
+720/720 [==============================] - 0s 83us/step - loss: 33.7554 - val_loss: 70.5544
+Epoch 152/1500
+720/720 [==============================] - 0s 72us/step - loss: 33.1462 - val_loss: 71.9943
+Epoch 153/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.6223 - val_loss: 71.9646
+Epoch 154/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.9002 - val_loss: 69.0097
+Epoch 155/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.7809 - val_loss: 70.8974
+Epoch 156/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.5878 - val_loss: 70.1629
+Epoch 157/1500
+720/720 [==============================] - 0s 81us/step - loss: 33.4841 - val_loss: 70.4948
+Epoch 158/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.1002 - val_loss: 70.3129
+Epoch 159/1500
+720/720 [==============================] - 0s 61us/step - loss: 33.6371 - val_loss: 71.8551
+Epoch 160/1500
+720/720 [==============================] - 0s 56us/step - loss: 33.5226 - val_loss: 69.7989
+Epoch 161/1500
+720/720 [==============================] - 0s 67us/step - loss: 32.9675 - val_loss: 70.4248
+Epoch 162/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.5701 - val_loss: 71.0211
+Epoch 163/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.4038 - val_loss: 70.0626
+Epoch 164/1500
+720/720 [==============================] - 0s 80us/step - loss: 33.3688 - val_loss: 72.0503
+Epoch 165/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.3733 - val_loss: 69.1171
+Epoch 166/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.3678 - val_loss: 68.5114
+Epoch 167/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.6520 - val_loss: 68.5204
+Epoch 168/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.8304 - val_loss: 69.7201
+Epoch 169/1500
+720/720 [==============================] - 0s 76us/step - loss: 33.0192 - val_loss: 69.1726
+Epoch 170/1500
+720/720 [==============================] - 0s 79us/step - loss: 33.0316 - val_loss: 70.9346
+Epoch 171/1500
+720/720 [==============================] - 0s 90us/step - loss: 33.5479 - val_loss: 71.7596
+Epoch 172/1500
+720/720 [==============================] - 0s 63us/step - loss: 33.3459 - val_loss: 70.9558
+Epoch 173/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.0019 - val_loss: 70.1870
+Epoch 174/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.0680 - val_loss: 71.2424
+Epoch 175/1500
+720/720 [==============================] - 0s 58us/step - loss: 33.0659 - val_loss: 69.8743
+Epoch 176/1500
+720/720 [==============================] - 0s 81us/step - loss: 33.1074 - val_loss: 71.8650
+Epoch 177/1500
+720/720 [==============================] - 0s 108us/step - loss: 33.5580 - val_loss: 69.3101
+Epoch 178/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.7501 - val_loss: 71.0380
+Epoch 179/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.1777 - val_loss: 70.2378
+Epoch 180/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.1032 - val_loss: 71.0900
+Epoch 181/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.2185 - val_loss: 69.5963
+Epoch 182/1500
+720/720 [==============================] - 0s 104us/step - loss: 32.9617 - val_loss: 70.8705
+Epoch 183/1500
+720/720 [==============================] - 0s 82us/step - loss: 32.7298 - val_loss: 70.2001
+Epoch 184/1500
+720/720 [==============================] - 0s 75us/step - loss: 33.2925 - val_loss: 69.8535
+Epoch 185/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.2456 - val_loss: 70.5535
+Epoch 186/1500
+720/720 [==============================] - 0s 93us/step - loss: 32.6309 - val_loss: 70.9457
+Epoch 187/1500
+720/720 [==============================] - 0s 62us/step - loss: 33.4544 - val_loss: 69.7611
+Epoch 188/1500
+720/720 [==============================] - 0s 92us/step - loss: 33.9057 - val_loss: 70.3232
+Epoch 189/1500
+720/720 [==============================] - 0s 78us/step - loss: 33.9640 - val_loss: 70.0499
+Epoch 190/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.7030 - val_loss: 69.1357
+Epoch 191/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.5107 - val_loss: 69.9096
+Epoch 192/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.0686 - val_loss: 69.5444
+Epoch 193/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.2046 - val_loss: 70.6041
+Epoch 194/1500
+720/720 [==============================] - 0s 60us/step - loss: 33.3628 - val_loss: 72.3088
+Epoch 195/1500
+720/720 [==============================] - 0s 104us/step - loss: 32.8155 - val_loss: 69.9278
+Epoch 196/1500
+720/720 [==============================] - 0s 103us/step - loss: 32.9692 - val_loss: 71.0696
+Epoch 197/1500
+720/720 [==============================] - 0s 92us/step - loss: 33.0956 - val_loss: 70.4105
+Epoch 198/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.0209 - val_loss: 70.0061
+Epoch 199/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.1983 - val_loss: 70.5501
+Epoch 200/1500
+720/720 [==============================] - 0s 60us/step - loss: 32.9179 - val_loss: 70.3708
+Epoch 201/1500
+720/720 [==============================] - 0s 84us/step - loss: 33.1105 - val_loss: 71.4236
+Epoch 202/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.4931 - val_loss: 70.1711
+Epoch 203/1500
+720/720 [==============================] - 0s 96us/step - loss: 33.1389 - val_loss: 69.3859
+Epoch 204/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.1887 - val_loss: 71.0184
+Epoch 205/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.6381 - val_loss: 69.5318
+Epoch 206/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.4865 - val_loss: 69.4300
+Epoch 207/1500
+720/720 [==============================] - 0s 63us/step - loss: 32.7967 - val_loss: 70.3482
+Epoch 208/1500
+720/720 [==============================] - 0s 109us/step - loss: 32.8844 - val_loss: 71.6566
+Epoch 209/1500
+720/720 [==============================] - 0s 88us/step - loss: 33.1921 - val_loss: 71.8777
+Epoch 210/1500
+720/720 [==============================] - 0s 80us/step - loss: 33.6060 - val_loss: 69.9423
+Epoch 211/1500
+720/720 [==============================] - 0s 63us/step - loss: 32.9419 - val_loss: 70.1741
+Epoch 212/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.1175 - val_loss: 71.1946
+Epoch 213/1500
+720/720 [==============================] - 0s 65us/step - loss: 32.4599 - val_loss: 70.5801
+Epoch 214/1500
+720/720 [==============================] - 0s 71us/step - loss: 32.7724 - val_loss: 69.7045
+Epoch 215/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.1454 - val_loss: 69.7643
+Epoch 216/1500
+720/720 [==============================] - 0s 112us/step - loss: 34.0363 - val_loss: 70.7866
+Epoch 217/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.3065 - val_loss: 69.4096
+Epoch 218/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.9083 - val_loss: 71.8253
+Epoch 219/1500
+720/720 [==============================] - 0s 71us/step - loss: 34.4716 - val_loss: 69.6013
+Epoch 220/1500
+720/720 [==============================] - 0s 66us/step - loss: 34.0426 - val_loss: 69.9046
+Epoch 221/1500
+720/720 [==============================] - 0s 80us/step - loss: 32.7906 - val_loss: 70.8845
+Epoch 222/1500
+720/720 [==============================] - 0s 76us/step - loss: 32.9398 - val_loss: 69.2825
+Epoch 223/1500
+720/720 [==============================] - 0s 89us/step - loss: 33.2070 - val_loss: 71.7008
+Epoch 224/1500
+720/720 [==============================] - 0s 79us/step - loss: 32.8090 - val_loss: 70.3513
+Epoch 225/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.0043 - val_loss: 70.7328
+Epoch 226/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.1171 - val_loss: 71.9192
+Epoch 227/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.8097 - val_loss: 70.3534
+Epoch 228/1500
+720/720 [==============================] - 0s 90us/step - loss: 32.7907 - val_loss: 69.8315
+Epoch 229/1500
+720/720 [==============================] - 0s 84us/step - loss: 32.8210 - val_loss: 69.8167
+Epoch 230/1500
+720/720 [==============================] - 0s 73us/step - loss: 32.9342 - val_loss: 69.9528
+Epoch 231/1500
+720/720 [==============================] - 0s 67us/step - loss: 33.1853 - val_loss: 72.1765
+Epoch 232/1500
+720/720 [==============================] - 0s 64us/step - loss: 33.5767 - val_loss: 69.6716
+Epoch 233/1500
+720/720 [==============================] - 0s 72us/step - loss: 33.6271 - val_loss: 72.1154
+Epoch 234/1500
+720/720 [==============================] - 0s 78us/step - loss: 32.8121 - val_loss: 70.4011
+Epoch 235/1500
+720/720 [==============================] - 0s 95us/step - loss: 33.1404 - val_loss: 71.3595
+Epoch 236/1500
+720/720 [==============================] - 0s 92us/step - loss: 32.6459 - val_loss: 69.1970
+Epoch 237/1500
+720/720 [==============================] - 0s 70us/step - loss: 33.6513 - val_loss: 70.9607
+Epoch 238/1500
+720/720 [==============================] - 0s 67us/step - loss: 32.8699 - val_loss: 70.1027
+Epoch 239/1500
+720/720 [==============================] - 0s 61us/step - loss: 33.0390 - val_loss: 70.4030
+Epoch 240/1500
+720/720 [==============================] - 0s 65us/step - loss: 32.8681 - val_loss: 71.1433
+Epoch 241/1500
+720/720 [==============================] - 0s 92us/step - loss: 32.7642 - val_loss: 71.1691
+Epoch 242/1500
+720/720 [==============================] - 0s 77us/step - loss: 32.6651 - val_loss: 71.5466
+Epoch 243/1500
+720/720 [==============================] - 0s 94us/step - loss: 32.4954 - val_loss: 71.3467
+Epoch 244/1500
+720/720 [==============================] - 0s 77us/step - loss: 32.6725 - val_loss: 70.6671
+Epoch 245/1500
+720/720 [==============================] - 0s 53us/step - loss: 33.0346 - val_loss: 70.5810
+Epoch 246/1500
+720/720 [==============================] - 0s 67us/step - loss: 32.6541 - val_loss: 70.6625
+Epoch 247/1500
+720/720 [==============================] - 0s 60us/step - loss: 32.4954 - val_loss: 70.9199
+Epoch 248/1500
+720/720 [==============================] - 0s 74us/step - loss: 32.9364 - val_loss: 71.8074
+Epoch 249/1500
+720/720 [==============================] - 0s 108us/step - loss: 33.8838 - val_loss: 70.2850
+Epoch 250/1500
+720/720 [==============================] - 0s 77us/step - loss: 34.0248 - val_loss: 70.4725
+Epoch 251/1500
+720/720 [==============================] - 0s 73us/step - loss: 33.1394 - val_loss: 69.9170
+Epoch 252/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.1520 - val_loss: 70.5447
+Epoch 253/1500
+720/720 [==============================] - 0s 66us/step - loss: 32.7786 - val_loss: 69.7507
+Epoch 254/1500
+720/720 [==============================] - 0s 62us/step - loss: 33.0872 - val_loss: 71.7986
+Epoch 255/1500
+720/720 [==============================] - 0s 75us/step - loss: 32.6136 - val_loss: 70.0828
+Epoch 256/1500
+720/720 [==============================] - 0s 84us/step - loss: 33.0994 - val_loss: 71.7309
+Epoch 257/1500
+720/720 [==============================] - 0s 71us/step - loss: 33.4217 - val_loss: 71.3336
+Epoch 258/1500
+720/720 [==============================] - 0s 72us/step - loss: 33.2308 - val_loss: 71.2938
+Epoch 259/1500
+720/720 [==============================] - 0s 79us/step - loss: 32.7275 - val_loss: 70.7276
+Epoch 260/1500
+720/720 [==============================] - 0s 71us/step - loss: 32.8592 - val_loss: 70.2336
+Epoch 261/1500
+720/720 [==============================] - 0s 92us/step - loss: 32.9417 - val_loss: 70.2670
+Epoch 262/1500
+720/720 [==============================] - 0s 94us/step - loss: 32.9538 - val_loss: 70.4826
+Epoch 263/1500
+720/720 [==============================] - 0s 86us/step - loss: 33.0170 - val_loss: 70.7602
+Epoch 264/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.5888 - val_loss: 71.7484
+Epoch 265/1500
+720/720 [==============================] - 0s 72us/step - loss: 33.0737 - val_loss: 70.4530
+Epoch 266/1500
+720/720 [==============================] - 0s 63us/step - loss: 33.4971 - val_loss: 70.0686
+Epoch 267/1500
+720/720 [==============================] - 0s 66us/step - loss: 33.1074 - val_loss: 70.0358
+Epoch 268/1500
+720/720 [==============================] - 0s 95us/step - loss: 33.0279 - val_loss: 70.7370
+Epoch 269/1500
+720/720 [==============================] - 0s 90us/step - loss: 33.1475 - val_loss: 70.7793
+Epoch 270/1500
+720/720 [==============================] - 0s 74us/step - loss: 32.7912 - val_loss: 70.8810
+Epoch 271/1500
+720/720 [==============================] - 0s 69us/step - loss: 33.0097 - val_loss: 70.4884
+Epoch 272/1500
+720/720 [==============================] - 0s 66us/step - loss: 32.8622 - val_loss: 70.2246
+Epoch 273/1500
+720/720 [==============================] - 0s 62us/step - loss: 33.1707 - val_loss: 70.2607
+Epoch 274/1500
+720/720 [==============================] - 0s 81us/step - loss: 32.9034 - val_loss: 69.8675
+Epoch 275/1500
+720/720 [==============================] - 0s 100us/step - loss: 33.2215 - val_loss: 72.4032
+Epoch 276/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.3102 - val_loss: 70.9795
+Epoch 277/1500
+720/720 [==============================] - 0s 109us/step - loss: 33.0539 - val_loss: 72.1640
+Epoch 278/1500
+720/720 [==============================] - 0s 95us/step - loss: 33.4108 - val_loss: 71.4351
+Epoch 279/1500
+720/720 [==============================] - 0s 77us/step - loss: 33.3090 - val_loss: 70.7821
+Epoch 280/1500
+720/720 [==============================] - 0s 96us/step - loss: 33.1196 - val_loss: 71.0958
+Epoch 281/1500
+720/720 [==============================] - 0s 76us/step - loss: 33.1612 - val_loss: 70.9056
+Epoch 282/1500
+720/720 [==============================] - 0s 69us/step - loss: 33.0092 - val_loss: 72.6933
+Epoch 283/1500
+720/720 [==============================] - 0s 63us/step - loss: 32.7698 - val_loss: 71.2504
+Epoch 284/1500
+720/720 [==============================] - 0s 67us/step - loss: 32.7460 - val_loss: 69.8845
+Epoch 285/1500
+720/720 [==============================] - 0s 58us/step - loss: 32.6424 - val_loss: 71.8911
+Epoch 286/1500
+720/720 [==============================] - 0s 72us/step - loss: 32.4995 - val_loss: 71.2881
+Epoch 287/1500
+720/720 [==============================] - 0s 96us/step - loss: 32.7502 - val_loss: 70.0264
+Epoch 288/1500
+720/720 [==============================] - 0s 74us/step - loss: 32.5672 - val_loss: 71.1176
+Epoch 289/1500
+720/720 [==============================] - 0s 93us/step - loss: 33.2634 - val_loss: 71.2159
+Epoch 290/1500
+720/720 [==============================] - 0s 90us/step - loss: 32.6761 - val_loss: 70.1009
+Epoch 291/1500
+720/720 [==============================] - 0s 73us/step - loss: 32.7801 - val_loss: 70.5953
+Epoch 292/1500
+720/720 [==============================] - 0s 93us/step - loss: 33.4718 - val_loss: 71.0416
+Epoch 293/1500
+720/720 [==============================] - 0s 102us/step - loss: 33.7115 - val_loss: 71.9189
+Epoch 294/1500
+720/720 [==============================] - 0s 93us/step - loss: 33.6464 - val_loss: 70.4171
+Epoch 295/1500
+720/720 [==============================] - 0s 100us/step - loss: 33.3566 - val_loss: 71.3804
+Epoch 296/1500
+720/720 [==============================] - 0s 94us/step - loss: 33.1438 - val_loss: 70.9782
+Epoch 297/1500
+720/720 [==============================] - 0s 101us/step - loss: 32.8769 - val_loss: 70.8674
+Epoch 298/1500
+720/720 [==============================] - 0s 84us/step - loss: 32.5008 - val_loss: 71.0859
+Epoch 299/1500
+720/720 [==============================] - 0s 70us/step - loss: 32.3945 - val_loss: 70.9209
+Epoch 300/1500
+720/720 [==============================] - 0s 57us/step - loss: 32.5823 - val_loss: 69.6232
+Epoch 301/1500
+720/720 [==============================] - 0s 55us/step - loss: 33.5030 - val_loss: 71.4951
+Epoch 302/1500
+720/720 [==============================] - 0s 57us/step - loss: 33.2780 - val_loss: 70.1852
+Epoch 303/1500
+720/720 [==============================] - 0s 55us/step - loss: 32.7797 - val_loss: 71.0619
+Epoch 304/1500
+720/720 [==============================] - 0s 61us/step - loss: 33.0237 - val_loss: 70.0593
+Epoch 305/1500
+720/720 [==============================] - 0s 58us/step - loss: 34.3991 - val_loss: 71.9235
+Epoch 306/1500
+720/720 [==============================] - 0s 50us/step - loss: 33.0165 - val_loss: 70.4827
+Epoch 307/1500
+720/720 [==============================] - 0s 51us/step - loss: 33.0750 - val_loss: 71.8164
+Epoch 308/1500
+720/720 [==============================] - 0s 47us/step - loss: 33.5007 - val_loss: 70.3046
+Epoch 309/1500
+720/720 [==============================] - 0s 54us/step - loss: 32.8159 - val_loss: 71.4879
+Epoch 310/1500
+720/720 [==============================] - 0s 51us/step - loss: 32.9981 - val_loss: 71.0654
+Epoch 311/1500
+720/720 [==============================] - 0s 47us/step - loss: 32.9308 - val_loss: 70.7069
+Epoch 312/1500
+720/720 [==============================] - 0s 74us/step - loss: 33.1550 - val_loss: 71.6379
+Epoch 313/1500
+720/720 [==============================] - 0s 106us/step - loss: 33.3923 - val_loss: 70.2671
+Epoch 314/1500
+720/720 [==============================] - 0s 107us/step - loss: 33.3465 - val_loss: 71.3054
+Epoch 315/1500
+720/720 [==============================] - 0s 110us/step - loss: 32.8108 - val_loss: 70.8821
+Epoch 316/1500
+720/720 [==============================] - 0s 107us/step - loss: 32.6002 - val_loss: 71.0465
+Epoch 317/1500
+720/720 [==============================] - 0s 70us/step - loss: 32.5760 - val_loss: 71.4233
+Epoch 318/1500
+720/720 [==============================] - 0s 75us/step - loss: 32.3483 - val_loss: 71.7590
+Epoch 319/1500
+720/720 [==============================] - 0s 58us/step - loss: 33.1725 - val_loss: 69.6191
+Epoch 320/1500
+720/720 [==============================] - 0s 68us/step - loss: 32.5447 - val_loss: 71.4248
+Epoch 321/1500
+720/720 [==============================] - 0s 68us/step - loss: 33.0326 - val_loss: 71.8889
+Epoch 322/1500
+720/720 [==============================] - 0s 56us/step - loss: 32.7242 - val_loss: 69.7628
+Epoch 323/1500
+720/720 [==============================] - 0s 62us/step - loss: 32.8884 - val_loss: 70.7202
+Epoch 324/1500
+720/720 [==============================] - 0s 56us/step - loss: 33.3399 - val_loss: 70.7013
+Epoch 325/1500
+720/720 [==============================] - 0s 58us/step - loss: 32.9682 - val_loss: 69.9585
+Epoch 326/1500
+720/720 [==============================] - 0s 55us/step - loss: 32.7256 - val_loss: 70.4571
+Epoch 327/1500
+720/720 [==============================] - 0s 57us/step - loss: 32.3696 - val_loss: 70.9235
+Epoch 328/1500
+720/720 [==============================] - 0s 67us/step - loss: 32.6537 - val_loss: 71.3947
+Epoch 329/1500
+720/720 [==============================] - 0s 77us/step - loss: 32.4403 - val_loss: 70.8690
+Epoch 330/1500
+720/720 [==============================] - 0s 70us/step - loss: 32.5557 - val_loss: 72.6035
+Epoch 331/1500
+720/720 [==============================] - 0s 65us/step - loss: 33.1919 - val_loss: 72.5327
+Epoch 332/1500
+720/720 [==============================] - 0s 67us/step - loss: 32.9941 - val_loss: 70.6774
+Epoch 333/1500
+720/720 [==============================] - 0s 71us/step - loss: 32.5409 - val_loss: 70.8340
+Epoch 334/1500
+720/720 [==============================] - 0s 58us/step - loss: 32.7791 - val_loss: 70.3056
+Epoch 335/1500
+720/720 [==============================] - 0s 59us/step - loss: 33.1779 - val_loss: 71.7990
+Epoch 336/1500
+720/720 [==============================] - 0s 64us/step - loss: 32.7687 - val_loss: 70.1433
+Epoch 337/1500
+720/720 [==============================] - 0s 55us/step - loss: 32.9963 - val_loss: 71.6532
+Epoch 338/1500
+720/720 [==============================] - 0s 70us/step - loss: 32.5732 - val_loss: 72.1567
+Epoch 339/1500
+720/720 [==============================] - 0s 55us/step - loss: 32.8589 - val_loss: 71.0658
+Epoch 340/1500
+720/720 [==============================] - 0s 58us/step - loss: 32.8803 - val_loss: 71.1336
+Epoch 341/1500
+720/720 [==============================] - 0s 56us/step - loss: 32.4050 - val_loss: 70.9926
+Epoch 342/1500
+720/720 [==============================] - 0s 58us/step - loss: 33.3142 - val_loss: 70.3244
+Epoch 343/1500
+720/720 [==============================] - 0s 51us/step - loss: 32.9421 - val_loss: 70.5619
+Epoch 344/1500
+720/720 [==============================] - 0s 52us/step - loss: 33.0691 - val_loss: 71.2500
+Epoch 345/1500
+720/720 [==============================] - 0s 48us/step - loss: 33.2953 - val_loss: 70.2336
+Epoch 346/1500
+720/720 [==============================] - 0s 61us/step - loss: 32.8799 - val_loss: 70.9728
+Epoch 347/1500
+720/720 [==============================] - 0s 59us/step - loss: 32.7068 - val_loss: 72.8550
+Epoch 348/1500
+720/720 [==============================] - 0s 59us/step - loss: 32.7851 - val_loss: 69.7973
+Epoch 349/1500
+720/720 [==============================] - 0s 58us/step - loss: 33.1772 - val_loss: 71.2876
+Epoch 350/1500
+720/720 [==============================] - 0s 59us/step - loss: 32.8119 - val_loss: 71.5166
+Epoch 351/1500
+720/720 [==============================] - 0s 68us/step - loss: 32.4788 - val_loss: 71.6946
+Epoch 352/1500
+720/720 [==============================] - 0s 54us/step - loss: 33.4133 - val_loss: 71.4298
+Epoch 353/1500
+ 32/720 [&gt;.............................] - ETA: 0s - loss: 30.6343</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">KeyboardInterrupt</span>                         Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-31-2a4ec4041603&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model<span class="ansi-blue-fg">.</span>fit<span class="ansi-blue-fg">(</span>combined<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">800</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span> seq1<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">800</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span> epochs<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">1500</span><span class="ansi-blue-fg">,</span> validation_split<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">0.1</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/models.py</span> in <span class="ansi-cyan-fg">fit</span><span class="ansi-blue-fg">(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    958</span>                               initial_epoch<span class="ansi-blue-fg">=</span>initial_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    959</span>                               steps_per_epoch<span class="ansi-blue-fg">=</span>steps_per_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">--&gt; 960</span><span class="ansi-red-fg">                               validation_steps=validation_steps)
+</span><span class="ansi-green-intense-fg ansi-bold">    961</span> 
+<span class="ansi-green-intense-fg ansi-bold">    962</span>     def evaluate(self, x, y, batch_size=32, verbose=1,
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">fit</span><span class="ansi-blue-fg">(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1655</span>                               initial_epoch<span class="ansi-blue-fg">=</span>initial_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">   1656</span>                               steps_per_epoch<span class="ansi-blue-fg">=</span>steps_per_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1657</span><span class="ansi-red-fg">                               validation_steps=validation_steps)
+</span><span class="ansi-green-intense-fg ansi-bold">   1658</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1659</span>     def evaluate(self, x=None, y=None,
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">_fit_loop</span><span class="ansi-blue-fg">(self, f, ins, out_labels, batch_size, epochs, verbose, callbacks, val_f, val_ins, shuffle, callback_metrics, initial_epoch, steps_per_epoch, validation_steps)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1217</span>                         batch_logs<span class="ansi-blue-fg">[</span>l<span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> o
+<span class="ansi-green-intense-fg ansi-bold">   1218</span> 
+<span class="ansi-green-fg">-&gt; 1219</span><span class="ansi-red-fg">                     </span>callbacks<span class="ansi-blue-fg">.</span>on_batch_end<span class="ansi-blue-fg">(</span>batch_index<span class="ansi-blue-fg">,</span> batch_logs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1220</span>                     <span class="ansi-green-fg">if</span> callback_model<span class="ansi-blue-fg">.</span>stop_training<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1221</span>                         <span class="ansi-green-fg">break</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/callbacks.py</span> in <span class="ansi-cyan-fg">on_batch_end</span><span class="ansi-blue-fg">(self, batch, logs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    109</span>             callback<span class="ansi-blue-fg">.</span>on_batch_end<span class="ansi-blue-fg">(</span>batch<span class="ansi-blue-fg">,</span> logs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    110</span>         self<span class="ansi-blue-fg">.</span>_delta_ts_batch_end<span class="ansi-blue-fg">.</span>append<span class="ansi-blue-fg">(</span>time<span class="ansi-blue-fg">.</span>time<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-</span> t_before_callbacks<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">--&gt; 111</span><span class="ansi-red-fg">         </span>delta_t_median <span class="ansi-blue-fg">=</span> np<span class="ansi-blue-fg">.</span>median<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>_delta_ts_batch_end<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    112</span>         if (self._delta_t_batch &gt; 0. and
+<span class="ansi-green-intense-fg ansi-bold">    113</span>            (delta_t_median &gt; 0.95 * self._delta_t_batch and delta_t_median &gt; 0.1)):
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/lib/function_base.py</span> in <span class="ansi-cyan-fg">median</span><span class="ansi-blue-fg">(a, axis, out, overwrite_input, keepdims)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4100</span>     &#34;&#34;&#34;
+<span class="ansi-green-intense-fg ansi-bold">   4101</span>     r, k = _ureduce(a, func=_median, axis=axis, out=out,
+<span class="ansi-green-fg">-&gt; 4102</span><span class="ansi-red-fg">                     overwrite_input=overwrite_input)
+</span><span class="ansi-green-intense-fg ansi-bold">   4103</span>     <span class="ansi-green-fg">if</span> keepdims<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   4104</span>         <span class="ansi-green-fg">return</span> r<span class="ansi-blue-fg">.</span>reshape<span class="ansi-blue-fg">(</span>k<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/lib/function_base.py</span> in <span class="ansi-cyan-fg">_ureduce</span><span class="ansi-blue-fg">(a, func, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4014</span>         keepdim <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">*</span> a<span class="ansi-blue-fg">.</span>ndim
+<span class="ansi-green-intense-fg ansi-bold">   4015</span> 
+<span class="ansi-green-fg">-&gt; 4016</span><span class="ansi-red-fg">     </span>r <span class="ansi-blue-fg">=</span> func<span class="ansi-blue-fg">(</span>a<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4017</span>     <span class="ansi-green-fg">return</span> r<span class="ansi-blue-fg">,</span> keepdim
+<span class="ansi-green-intense-fg ansi-bold">   4018</span> 
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/lib/function_base.py</span> in <span class="ansi-cyan-fg">_median</span><span class="ansi-blue-fg">(a, axis, out, overwrite_input)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4152</span>     <span class="ansi-green-fg">if</span> np<span class="ansi-blue-fg">.</span>issubdtype<span class="ansi-blue-fg">(</span>a<span class="ansi-blue-fg">.</span>dtype<span class="ansi-blue-fg">,</span> np<span class="ansi-blue-fg">.</span>inexact<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> sz <span class="ansi-blue-fg">&gt;</span> <span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   4153</span>         <span class="ansi-red-fg"># warn and return nans like mean would</span>
+<span class="ansi-green-fg">-&gt; 4154</span><span class="ansi-red-fg">         </span>rout <span class="ansi-blue-fg">=</span> mean<span class="ansi-blue-fg">(</span>part<span class="ansi-blue-fg">[</span>indexer<span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span> axis<span class="ansi-blue-fg">=</span>axis<span class="ansi-blue-fg">,</span> out<span class="ansi-blue-fg">=</span>out<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4155</span>         <span class="ansi-green-fg">return</span> np<span class="ansi-blue-fg">.</span>lib<span class="ansi-blue-fg">.</span>utils<span class="ansi-blue-fg">.</span>_median_nancheck<span class="ansi-blue-fg">(</span>part<span class="ansi-blue-fg">,</span> rout<span class="ansi-blue-fg">,</span> axis<span class="ansi-blue-fg">,</span> out<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4156</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/core/fromnumeric.py</span> in <span class="ansi-cyan-fg">mean</span><span class="ansi-blue-fg">(a, axis, dtype, out, keepdims)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2907</span> 
+<span class="ansi-green-intense-fg ansi-bold">   2908</span>     return _methods._mean(a, axis=axis, dtype=dtype,
+<span class="ansi-green-fg">-&gt; 2909</span><span class="ansi-red-fg">                           out=out, **kwargs)
+</span><span class="ansi-green-intense-fg ansi-bold">   2910</span> 
+<span class="ansi-green-intense-fg ansi-bold">   2911</span> 
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/numpy/core/_methods.py</span> in <span class="ansi-cyan-fg">_mean</span><span class="ansi-blue-fg">(a, axis, dtype, out, keepdims)</span>
+<span class="ansi-green-intense-fg ansi-bold">     78</span>             ret <span class="ansi-blue-fg">=</span> arr<span class="ansi-blue-fg">.</span>dtype<span class="ansi-blue-fg">.</span>type<span class="ansi-blue-fg">(</span>ret <span class="ansi-blue-fg">/</span> rcount<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     79</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">---&gt; 80</span><span class="ansi-red-fg">             </span>ret <span class="ansi-blue-fg">=</span> ret<span class="ansi-blue-fg">.</span>dtype<span class="ansi-blue-fg">.</span>type<span class="ansi-blue-fg">(</span>ret <span class="ansi-blue-fg">/</span> rcount<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     81</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     82</span>         ret <span class="ansi-blue-fg">=</span> ret <span class="ansi-blue-fg">/</span> rcount
+
+<span class="ansi-red-fg">KeyboardInterrupt</span>: </pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[42]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">start</span> <span class="o">=</span> <span class="mi">901</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">combined</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">legend</span><span class="o">=</span><span class="s1">&#39;Pred&#39;</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">seq1</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[42]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.legend.Legend at 0x18275eb358&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+NxTFrpMAAAAASUVORK5CYII=
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[242]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[242]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.axes._subplots.AxesSubplot at 0x183ac67198&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+tAAAAABJRU5ErkJggg==
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

@@ -1,0 +1,909 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Adagrad based matrix factorization</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Adagrad-based-matrix-factorization">Adagrad based matrix factorization<a class="anchor-link" href="#Adagrad-based-matrix-factorization">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In a <a href="./nnmf-tensorflow.html">previous post</a>, we had seen how to perfom non-negative matrix factorization (NNMF) using Tensorflow. In <a href="./linear-regression-adagrad-vs-gd.html">another previous post</a>, I had shown how to use Adagrad for linear regression. This current post can be considered an extension of the linear regression using Adagrad post. Just for the purpose of education, I'll poorly initialise the estimate of one of the decomposed matrix, to see how well Adagrad can adjust weights!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Customary-imports">Customary imports<a class="anchor-link" href="#Customary-imports">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">matplotlib.animation</span> <span class="kn">import</span> <span class="n">FuncAnimation</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">gridspec</span>
+
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Creating-the-matrix-to-be-decomposed">Creating the matrix to be decomposed<a class="anchor-link" href="#Creating-the-matrix-to-be-decomposed">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Masking-one-entry">Masking one entry<a class="anchor-link" href="#Masking-one-entry">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[4]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ nan,   4.,   5.],
+       [  4.,   4.,   5.],
+       [  5.,   3.,   4.],
+       [  2.,   3.,   3.]], dtype=float32)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Defining-the-cost-function">Defining the cost function<a class="anchor-link" href="#Defining-the-cost-function">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="n">param_list</span><span class="p">):</span>
+    <span class="n">W</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">param_list</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">pred</span> <span class="o">-</span> <span class="n">A</span><span class="p">)[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Decomposition-params">Decomposition params<a class="anchor-link" href="#Decomposition-params">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">rank</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span>
+<span class="n">n_steps</span> <span class="o">=</span> <span class="mi">10000</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Adagrad-routine">Adagrad routine<a class="anchor-link" href="#Adagrad-routine">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">adagrad_gd</span><span class="p">(</span><span class="n">param_init</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    param_init: List of initial values of parameters</span>
+<span class="sd">    cost: cost function</span>
+<span class="sd">    niter: Number of iterations to run</span>
+<span class="sd">    lr: Learning rate</span>
+<span class="sd">    eps: Fudge factor, to avoid division by zero</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+    <span class="kn">from</span> <span class="nn">autograd</span> <span class="kn">import</span> <span class="n">grad</span>
+    <span class="c1"># Fixing the random_seed</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+    
+    <span class="c1"># Function to compute the gradient of the cost function</span>
+    <span class="n">grad_cost</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">param_init</span><span class="p">)</span>
+    <span class="n">param_array</span><span class="p">,</span> <span class="n">grad_array</span><span class="p">,</span> <span class="n">lr_array</span><span class="p">,</span> <span class="n">cost_array</span> <span class="o">=</span> <span class="p">[</span><span class="n">params</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[[</span><span class="n">lr</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]],</span> <span class="p">[</span><span class="n">cost</span><span class="p">(</span><span class="n">params</span><span class="p">)]</span>
+    <span class="c1"># Initialising sum of squares of gradients for each param as 0</span>
+    <span class="n">sum_squares_gradients</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">out_params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">gradients</span> <span class="o">=</span> <span class="n">grad_cost</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="c1"># At each iteration, we add the square of the gradients to `sum_squares_gradients`</span>
+        <span class="n">sum_squares_gradients</span><span class="o">=</span> <span class="p">[</span><span class="n">eps</span> <span class="o">+</span> <span class="n">sum_prev</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">sum_prev</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sum_squares_gradients</span><span class="p">,</span> <span class="n">gradients</span><span class="p">)]</span>
+        <span class="c1"># Adapted learning rate for parameter list</span>
+        <span class="n">lrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sg</span><span class="p">))</span> <span class="k">for</span> <span class="n">sg</span> <span class="ow">in</span> <span class="n">sum_squares_gradients</span><span class="p">]</span>
+        <span class="c1"># Paramter update</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">param</span><span class="o">-</span><span class="p">(</span><span class="n">adapted_lr</span><span class="o">*</span><span class="n">grad_param</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">adapted_lr</span><span class="p">,</span> <span class="n">grad_param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">lrs</span><span class="p">,</span> <span class="n">gradients</span><span class="p">)]</span>
+        <span class="n">param_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">lr_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lrs</span><span class="p">)</span>
+        <span class="n">grad_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gradients</span><span class="p">)</span>
+        <span class="n">cost_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cost</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+        
+    <span class="k">return</span> <span class="n">params</span><span class="p">,</span> <span class="n">param_array</span><span class="p">,</span> <span class="n">grad_array</span><span class="p">,</span> <span class="n">lr_array</span><span class="p">,</span> <span class="n">cost_array</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Running-Adagrad">Running Adagrad<a class="anchor-link" href="#Running-Adagrad">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Fixing-initial-parameters">Fixing initial parameters<a class="anchor-link" href="#Fixing-initial-parameters">&#182;</a></h4><p>I'm poorly initialising <code>H</code> here to see how the learning rates vary for <code>W</code> and <code>H</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">H_init</span> <span class="o">=</span>  <span class="o">-</span><span class="mi">5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="n">W_init</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rank</span><span class="p">))</span>
+<span class="n">param_init</span> <span class="o">=</span> <span class="p">[</span><span class="n">W_init</span><span class="p">,</span> <span class="n">H_init</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H_init</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[9]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ -8.82026173,  -2.00078604,  -4.89368992],
+       [-11.204466  ,  -9.33778995,  -4.8863894 ]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">W_init</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[10]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ 0.95008842,  0.15135721],
+       [ 0.10321885,  0.4105985 ],
+       [ 0.14404357,  1.45427351],
+       [ 0.76103773,  0.12167502]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="c1"># Cost for initial set of parameters</span>
+<span class="n">cost</span><span class="p">(</span><span class="n">param_init</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[11]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>11.651268820608442</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span>
+<span class="n">niter</span><span class="o">=</span><span class="mi">2000</span>
+<span class="n">ada_params</span><span class="p">,</span> <span class="n">ada_param_array</span><span class="p">,</span> <span class="n">ada_grad_array</span><span class="p">,</span> <span class="n">ada_lr_array</span><span class="p">,</span> <span class="n">ada_cost_array</span> <span class="o">=</span> <span class="n">adagrad_gd</span><span class="p">(</span><span class="n">param_init</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">niter</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Cost-v/s-#-iterations">Cost v/s # iterations<a class="anchor-link" href="#Cost-v/s-#-iterations">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">ada_cost_array</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">logy</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Cost (log scale)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;# Iterations&quot;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[13]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.text.Text at 0x10ece7610&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Final-set-of-parameters-and-recovered-matrix">Final set of parameters and recovered matrix<a class="anchor-link" href="#Final-set-of-parameters-and-recovered-matrix">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">W_final</span><span class="p">,</span> <span class="n">H_final</span> <span class="o">=</span> <span class="n">ada_params</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W_final</span><span class="p">,</span> <span class="n">H_final</span><span class="p">)</span>
+<span class="n">pred_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">()</span>
+<span class="n">pred_df</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[14]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>5.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Learning-rate-evolution-for-W">Learning rate evolution for W<a class="anchor-link" href="#Learning-rate-evolution-for-W">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">W_lrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ada_lr_array</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">W_lrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ada_lr_array</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">fig</span><span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">width_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> 
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">max_W</span><span class="p">,</span> <span class="n">min_W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">W_lrs</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">W_lrs</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">iteration</span><span class="p">):</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">W_lrs</span><span class="p">[</span><span class="n">iteration</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="n">min_W</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_W</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">annot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.4f&#39;</span><span class="p">,</span> <span class="n">cbar_ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Learning rate update for W</span><span class="se">\n</span><span class="s2">Iteration: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iteration</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">anim</span> <span class="o">=</span> <span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">interval</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;W_update.gif&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">writer</span><span class="o">=</span><span class="s1">&#39;imagemagick&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="W_update.gif" alt=""></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Learning-rate-evolution-for-H">Learning rate evolution for H<a class="anchor-link" href="#Learning-rate-evolution-for-H">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H_lrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ada_lr_array</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">width_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> 
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>  <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">max_H</span><span class="p">,</span> <span class="n">min_H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H_lrs</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H_lrs</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">iteration</span><span class="p">):</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">H_lrs</span><span class="p">[</span><span class="n">iteration</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="n">min_H</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">max_H</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">annot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.2f&#39;</span><span class="p">,</span> <span class="n">cbar_ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Learning rate update for H</span><span class="se">\n</span><span class="s2">Iteration: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iteration</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">anim</span> <span class="o">=</span> <span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">interval</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;H_update.gif&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">writer</span><span class="o">=</span><span class="s1">&#39;imagemagick&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="H_update.gif" alt=""></p>
+
+</div>
+</div>
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

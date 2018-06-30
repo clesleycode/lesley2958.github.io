@@ -1,0 +1,628 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Data exploration using widgets in Matplotlib</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="http://www.cs.virginia.edu/~nb2cz/files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Data-exploration-using-widgets-in-Matplotlib">Data exploration using widgets in Matplotlib<a class="anchor-link" href="#Data-exploration-using-widgets-in-Matplotlib">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Imagine that you have to do data cleaning on 10s or 100s of sample points (akin to a row in a 2d matrix). For the purposes of data cleaning, you'd also need to zoom/pan at the data correpsonding to each sample point. Would you create 100s of static plots? We lose the zoom/pan ability there. How about we write a simple function and <code>manually</code> change the argument to reflect the sample #.</p>
+<p>In this post, I'll be looking at a simple Matplotlib widget to sift through the samples and retain the ability to pan and zoom. This post is heavily inspired by <a href="http://jakevdp.github.io/">Jake Vanderplas'</a> <a href="https://vimeo.com/63260224">PyData 2013 Matplotlib tutorial</a>. I would be creating 15 timeseries having recorded daily for an year for illustration purposes.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Setting-the-backend-to-TK.">Setting the backend to TK.<a class="anchor-link" href="#Setting-the-backend-to-TK.">&#182;</a></h3><p>For some reasons, it works better than the default OSX one.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="o">%</span><span class="k">matplotlib</span> tk
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Customary-imports">Customary imports<a class="anchor-link" href="#Customary-imports">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Creating-the-data">Creating the data<a class="anchor-link" href="#Creating-the-data">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="c1"># Fixing the seed for reproducibility</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">365</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s1">&#39;2017&#39;</span><span class="p">,</span><span class="n">freq</span><span class="o">=</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">365</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[4]:</div>
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2017-01-01</th>
+      <td>1.764052</td>
+      <td>0.400157</td>
+      <td>0.978738</td>
+      <td>2.240893</td>
+      <td>1.867558</td>
+      <td>-0.977278</td>
+      <td>0.950088</td>
+      <td>-0.151357</td>
+      <td>-0.103219</td>
+      <td>0.410599</td>
+      <td>0.144044</td>
+      <td>1.454274</td>
+      <td>0.761038</td>
+      <td>0.121675</td>
+      <td>0.443863</td>
+    </tr>
+    <tr>
+      <th>2017-01-02</th>
+      <td>0.333674</td>
+      <td>1.494079</td>
+      <td>-0.205158</td>
+      <td>0.313068</td>
+      <td>-0.854096</td>
+      <td>-2.552990</td>
+      <td>0.653619</td>
+      <td>0.864436</td>
+      <td>-0.742165</td>
+      <td>2.269755</td>
+      <td>-1.454366</td>
+      <td>0.045759</td>
+      <td>-0.187184</td>
+      <td>1.532779</td>
+      <td>1.469359</td>
+    </tr>
+    <tr>
+      <th>2017-01-03</th>
+      <td>0.154947</td>
+      <td>0.378163</td>
+      <td>-0.887786</td>
+      <td>-1.980796</td>
+      <td>-0.347912</td>
+      <td>0.156349</td>
+      <td>1.230291</td>
+      <td>1.202380</td>
+      <td>-0.387327</td>
+      <td>-0.302303</td>
+      <td>-1.048553</td>
+      <td>-1.420018</td>
+      <td>-1.706270</td>
+      <td>1.950775</td>
+      <td>-0.509652</td>
+    </tr>
+    <tr>
+      <th>2017-01-04</th>
+      <td>-0.438074</td>
+      <td>-1.252795</td>
+      <td>0.777490</td>
+      <td>-1.613898</td>
+      <td>-0.212740</td>
+      <td>-0.895467</td>
+      <td>0.386902</td>
+      <td>-0.510805</td>
+      <td>-1.180632</td>
+      <td>-0.028182</td>
+      <td>0.428332</td>
+      <td>0.066517</td>
+      <td>0.302472</td>
+      <td>-0.634322</td>
+      <td>-0.362741</td>
+    </tr>
+    <tr>
+      <th>2017-01-05</th>
+      <td>-0.672460</td>
+      <td>-0.359553</td>
+      <td>-0.813146</td>
+      <td>-1.726283</td>
+      <td>0.177426</td>
+      <td>-0.401781</td>
+      <td>-1.630198</td>
+      <td>0.462782</td>
+      <td>-0.907298</td>
+      <td>0.051945</td>
+      <td>0.729091</td>
+      <td>0.128983</td>
+      <td>1.139401</td>
+      <td>-1.234826</td>
+      <td>0.402342</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>  <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[5]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.axes._subplots.AxesSubplot at 0x10afcc850&gt;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Notice, that since I used <code>%matplotlib TK</code> backend, I don't  see the plot embedded in the notebook. Thus I'll save the current figure as an image and then link it here.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;all_data.png&quot;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="all_data.png" alt=""></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This sure does not look pretty.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Proposed-solution">Proposed solution<a class="anchor-link" href="#Proposed-solution">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="mpl-widget.gif" alt=""></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Great. It seems to do the intended job. Let us now look at the individual pieces and how we can tie them up.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Creating-the-initial-frame">Creating the initial frame<a class="anchor-link" href="#Creating-the-initial-frame">&#182;</a></h3><p>In the first frame we would like to plot the data for the first sample.</p>
+<div class="highlight"><pre><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">df</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample number: 0&quot;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Creating-the-buttons-at-the-bottom">Creating the buttons at the bottom<a class="anchor-link" href="#Creating-the-buttons-at-the-bottom">&#182;</a></h3><p>First, we'd want to make space for the button at the bottom and place them there. We can do this as follows:</p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">matplotlib.widgets</span> <span class="kn">import</span> <span class="n">Button</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+<span class="n">axprev</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.075</span><span class="p">])</span>
+<span class="n">axnext</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.81</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.075</span><span class="p">])</span>
+
+<span class="n">bnext</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">axnext</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
+<span class="n">bprev</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">axprev</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Linking-the-buttons-to-functions">Linking the buttons to functions<a class="anchor-link" href="#Linking-the-buttons-to-functions">&#182;</a></h3><p>We'd next want to call some function each time either of the two buttons are pressed. We would also need a notion of currently selected data point. The idea would be that each time, <code>&gt;</code> is pressed, we advance the currently selected point and plot correspondingly.</p>
+<p>We'd have to define <code>next() and prev()</code> where we increment and decrement the selected data point.</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">Index</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">df</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Sample number: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">prev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Sample number: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">)</span>
+</pre></div>
+<p>Here, <code>ax.cla()</code> clears the data for the current data point before drawing for the next one. <code>df[self.selected].plot(ax=ax)</code> plots for the newly selected data. <code>ax.set_title("Sample number: %d" %self.selected)</code> would change the title to reflect the currently used data point.</p>
+<p>We can link to callback as follows:</p>
+<div class="highlight"><pre><span class="n">callback</span> <span class="o">=</span> <span class="n">Index</span><span class="p">()</span>
+
+<span class="n">bnext</span><span class="o">.</span><span class="n">on_clicked</span><span class="p">(</span><span class="n">callback</span><span class="o">.</span><span class="n">next</span><span class="p">)</span>
+<span class="n">bprev</span><span class="o">.</span><span class="n">on_clicked</span><span class="p">(</span><span class="n">callback</span><span class="o">.</span><span class="n">prev</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Ensuring-we-do-not-select-home-out-of-range">Ensuring we do not select home out of range<a class="anchor-link" href="#Ensuring-we-do-not-select-home-out-of-range">&#182;</a></h3><p>If you notice, we simply incremented and decremented the selected data point without considering going beyond (0, number of data points). So, we need to change the call back functions to check that we do not go beyond the range. This would require the following changes to <code>next()</code> with the changes to <code>prev()</code> being similar.</p>
+<div class="highlight"><pre><span class="n">data_min</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">data_max</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+<span class="n">selected</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">&gt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_max</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_max</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Last sample reached. Cannot go forwards&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Sample number: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>There you go. This was fairly simple and fun to do, and yet can be very helpful! Did you like it, have suggestions, feel free to comment!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Complete-code">Complete code<a class="anchor-link" href="#Complete-code">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="kn">from</span> <span class="nn">matplotlib.widgets</span> <span class="kn">import</span> <span class="n">Button</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+<span class="n">df</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample number: 0&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Index</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">df</span>
+    <span class="n">data_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data_max</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">&gt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_max</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_max</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Last sample reached. Cannot go forwards&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+            <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Sample number: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span><span class="k">self</span>.selected)
+
+    <span class="k">def</span> <span class="nf">prev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">&lt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_min</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;First sample reached. Cannot go backwards&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+            <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Sample number: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span><span class="k">self</span>.selected)
+        
+
+<span class="n">callback</span> <span class="o">=</span> <span class="n">Index</span><span class="p">()</span>
+<span class="n">axprev</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.075</span><span class="p">])</span>
+<span class="n">axnext</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.81</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.075</span><span class="p">])</span>
+
+<span class="n">bnext</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">axnext</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
+<span class="n">bnext</span><span class="o">.</span><span class="n">on_clicked</span><span class="p">(</span><span class="n">callback</span><span class="o">.</span><span class="n">next</span><span class="p">)</span>
+
+<span class="n">bprev</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">axprev</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">)</span>
+<span class="n">bprev</span><span class="o">.</span><span class="n">on_clicked</span><span class="p">(</span><span class="n">callback</span><span class="o">.</span><span class="n">prev</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[7]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div></div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

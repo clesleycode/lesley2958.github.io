@@ -1,0 +1,767 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Nipun Batra</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Custom-Tensor-Factorisation">Custom Tensor Factorisation<a class="anchor-link" href="#Custom-Tensor-Factorisation">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In previous posts, we have looked at the standard tensor decomposition and also at how to do so using Autograd/Tensorflow. In this post, I'll mention a few custom/non-standard tensor decomposition schemes that may come in handy.</p>
+<p>Instead of Khatri product of decomposed matrices to produce the original matrix, we will look at a few dot prodct based combinations.</p>
+<p>We will break a matrix E of shape M, N, O using the following four cases:</p>
+<ol>
+<li>H (M, a), A (N, b), T (O, a, b)</li>
+<li>H (M, a), A (N, a, b), T (O, b)</li>
+<li>H (M, a, b), A (N, a), T (O, b)</li>
+<li>H (M, a), N (N, a), T (O, a)</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">O</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span>
+<span class="n">E_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">O</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">E_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">E_np</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">E_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">E_np</span><span class="p">,</span> <span class="n">E_np</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">E_np</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[5]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[[ 0.0605506 ,  0.03599664,  0.25087234,  0.33163366,  0.42881236,
+          0.34442001],
+        [ 0.14693202,  0.12447638,  0.1725975 ,  0.38583806,  0.62645085,
+          0.80823158],
+        [ 1.        ,  0.17360677,  0.06555334,  0.62725427,  0.12069365,
+          0.1828657 ]],
+
+       [[ 0.48998751,  0.38255239,  0.24461023,  0.52672268,  0.37219343,
+          0.08538137],
+        [ 0.02704806,  0.72177226,  0.22683561,  0.19101462,  0.1277134 ,
+          0.60084777],
+        [ 0.24456668,  0.49043866,  0.19626124,  0.10446358,  0.21828062,
+          0.14397225]],
+
+       [[ 0.24419427,  0.77580798,  0.00324624,  0.28413238,  0.44064043,
+          0.79667402],
+        [ 0.77413919,  0.71381069,  0.39812893,  0.52891816,  0.66570485,
+          0.6308962 ],
+        [ 0.61504237,  0.11248786,  0.17295706,  0.50186568,  0.18489032,
+          0.37835997]],
+
+       [[ 0.35379831,  0.17485743,  0.23209066,  0.70069727,  0.10180182,
+          0.1951613 ],
+        [ 0.09460633,  0.11393878,  0.69526342,  0.62463366,  0.12409625,
+          0.05300088],
+        [ 0.42331715,  0.04073832,  0.28221472,  0.77465318,  0.35136768,
+          0.15016356]]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Masking-20%-of-the-entries">Masking 20% of the entries<a class="anchor-link" href="#Masking-20%-of-the-entries">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">E_np_masked</span> <span class="o">=</span> <span class="n">E_np</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">O</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">&gt;</span><span class="mf">0.8</span><span class="p">:</span>
+                <span class="n">E_np_masked</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">E_np_masked</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[7]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[[        nan,  0.03599664,  0.25087234,  0.33163366,  0.42881236,
+          0.34442001],
+        [ 0.14693202,  0.12447638,         nan,  0.38583806,  0.62645085,
+                 nan],
+        [ 1.        ,  0.17360677,  0.06555334,  0.62725427,  0.12069365,
+          0.1828657 ]],
+
+       [[ 0.48998751,  0.38255239,         nan,  0.52672268,  0.37219343,
+          0.08538137],
+        [ 0.02704806,  0.72177226,  0.22683561,         nan,  0.1277134 ,
+          0.60084777],
+        [ 0.24456668,  0.49043866,  0.19626124,  0.10446358,  0.21828062,
+          0.14397225]],
+
+       [[        nan,  0.77580798,  0.00324624,  0.28413238,  0.44064043,
+          0.79667402],
+        [ 0.77413919,  0.71381069,         nan,  0.52891816,  0.66570485,
+          0.6308962 ],
+        [ 0.61504237,  0.11248786,  0.17295706,  0.50186568,  0.18489032,
+                 nan]],
+
+       [[ 0.35379831,         nan,  0.23209066,  0.70069727,  0.10180182,
+                 nan],
+        [ 0.09460633,         nan,  0.69526342,  0.62463366,  0.12409625,
+          0.05300088],
+        [ 0.42331715,  0.04073832,  0.28221472,  0.77465318,  0.35136768,
+          0.15016356]]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">b</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Case-1-H-(M,-a),-A-(N,-b),-T-(O,-a,-b)">Case 1 H (M, a), A (N, b), T (O, a, b)<a class="anchor-link" href="#Case-1-H-(M,-a),-A-(N,-b),-T-(O,-a,-b)">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">HA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Ma, Nb -&gt; MNab&#39;</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">HAT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;MNab, Oab -&gt; MNO&#39;</span><span class="p">,</span> <span class="n">HA</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+<span class="n">HAT</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[11]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(4, 3, 6)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Case-2-H-(M,-a),-A-(N,-a,-b),-T-(O,-b)">Case 2 H (M, a), A (N, a, b), T (O, b)<a class="anchor-link" href="#Case-2-H-(M,-a),-A-(N,-a,-b),-T-(O,-b)">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">HA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Ma, Nab -&gt; MNb&#39;</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="n">HAT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;MNb, Ob -&gt;MNO&#39;</span><span class="p">,</span> <span class="n">HA</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see that all we need to do is to create the EINSUM strings for the different cases</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">cases</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;HA&#39;</span><span class="p">:</span> <span class="s1">&#39;Ma, Nb -&gt; MNab&#39;</span><span class="p">,</span> <span class="s1">&#39;HAT&#39;</span><span class="p">:</span> <span class="s1">&#39;MNab, Oab -&gt; MNO&#39;</span><span class="p">},</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;HA&#39;</span><span class="p">:</span> <span class="s1">&#39;Ma, Nab -&gt; MNb&#39;</span><span class="p">,</span> <span class="s1">&#39;HAT&#39;</span><span class="p">:</span> <span class="s1">&#39;MNb, Ob -&gt; MNO&#39;</span><span class="p">},</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;HA&#39;</span><span class="p">:</span> <span class="s1">&#39;Mab, Na -&gt; MNb&#39;</span><span class="p">,</span> <span class="s1">&#39;HAT&#39;</span><span class="p">:</span> <span class="s1">&#39;MNb, Ob -&gt; MNO&#39;</span><span class="p">},</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;HA&#39;</span><span class="p">:</span> <span class="s1">&#39;Ma, Na -&gt; MNa&#39;</span><span class="p">,</span> <span class="s1">&#39;HAT&#39;</span><span class="p">:</span> <span class="s1">&#39;MNa, Oa -&gt; MNO&#39;</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">multiply_case</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">case</span><span class="p">):</span>
+    <span class="n">HA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="n">cases</span><span class="p">[</span><span class="n">case</span><span class="p">][</span><span class="s1">&#39;HA&#39;</span><span class="p">],</span> <span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+    <span class="n">HAT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="n">cases</span><span class="p">[</span><span class="n">case</span><span class="p">][</span><span class="s1">&#39;HAT&#39;</span><span class="p">],</span> <span class="n">HA</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HAT</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">E_np_masked</span><span class="p">,</span> <span class="n">case</span><span class="p">):</span>
+    <span class="n">HAT</span> <span class="o">=</span> <span class="n">multiply_case</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">E_np_masked</span><span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">HAT</span><span class="o">-</span><span class="n">E_np_masked</span><span class="p">)[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">error</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">from</span> <span class="nn">autograd</span> <span class="kn">import</span> <span class="n">multigrad</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">mg</span> <span class="o">=</span> <span class="n">multigrad</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">argnums</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">H</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">case</span><span class="o">=</span><span class="mi">2</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">params</span><span class="p">[</span><span class="s1">&#39;M&#39;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_np_masked</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">params</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">params</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">learn_HAT</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">E_np_masked</span><span class="p">,</span> <span class="n">num_iter</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
+    <span class="n">H_dim_chars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cases</span><span class="p">[</span><span class="n">case</span><span class="p">][</span><span class="s1">&#39;HA&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="n">H_dim</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H_dim_chars</span><span class="p">)</span>
+    <span class="n">A_dim_chars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cases</span><span class="p">[</span><span class="n">case</span><span class="p">][</span><span class="s1">&#39;HA&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="n">A_dim</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">A_dim_chars</span><span class="p">)</span>
+    <span class="n">T_dim_chars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cases</span><span class="p">[</span><span class="n">case</span><span class="p">][</span><span class="s1">&#39;HAT&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="n">T_dim</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">T_dim_chars</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">H_dim</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">A_dim</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">T_dim</span><span class="p">)</span>
+    
+    <span class="c1"># GD procedure</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+        <span class="n">del_h</span><span class="p">,</span> <span class="n">del_a</span><span class="p">,</span> <span class="n">del_t</span> <span class="o">=</span> <span class="n">mg</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">E_np_masked</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+        <span class="n">H</span><span class="o">-=</span><span class="n">lr</span><span class="o">*</span><span class="n">del_h</span>
+        <span class="n">A</span><span class="o">-=</span><span class="n">lr</span><span class="o">*</span><span class="n">del_a</span>
+        <span class="n">T</span><span class="o">-=</span><span class="n">lr</span><span class="o">*</span><span class="n">del_t</span>
+        <span class="c1"># Projection to non-negative space</span>
+        <span class="n">H</span><span class="p">[</span><span class="n">H</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">A</span><span class="p">[</span><span class="n">A</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">T</span><span class="p">[</span><span class="n">T</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="k">500</span>==0:
+            <span class="k">print</span><span class="p">(</span><span class="n">cost</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">E_np_masked</span><span class="p">,</span> <span class="n">case</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">learnt_factors</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">case_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="k">print</span> <span class="n">case_num</span>
+    <span class="k">print</span> <span class="s2">&quot;*&quot;</span><span class="o">*</span><span class="mi">30</span>
+    <span class="n">learnt_factors</span><span class="p">[</span><span class="n">case_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">learn_HAT</span><span class="p">(</span><span class="n">case_num</span><span class="p">,</span> <span class="n">E_np_masked</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>1
+******************************
+0.796066769834
+0.174785029807
+0.150046840099
+0.138501472717
+2
+******************************
+0.592664946527
+0.168544673995
+0.152961301292
+0.150055287512
+3
+******************************
+0.491833921984
+0.166327739064
+0.142030349507
+0.135573587985
+4
+******************************
+0.358511728923
+0.181591797797
+0.179021490862
+0.173692323398
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">learnt_factors</span><span class="p">[</span><span class="n">case</span><span class="p">]</span>
+<span class="n">multiply_case</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[30]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[[ 0.48882969,  0.18708795,  0.25397125,  0.5347884 ,  0.25369064,
+          0.19726996],
+        [ 0.20039975,  0.23810218,  0.68736954,  0.51351976,  0.39110993,
+          0.23696736],
+        [ 0.70095996,  0.16928001,  0.20180109,  0.71857591,  0.26201775,
+          0.19470855]],
+
+       [[ 0.47607553,  0.40750625,  0.02628398,  0.23101719,  0.25393685,
+          0.36988745],
+        [ 0.35253324,  0.40849102,  0.29493296,  0.29107321,  0.33595789,
+          0.37285137],
+        [ 0.31397732,  0.1601071 ,  0.08750033,  0.2674595 ,  0.15029872,
+          0.15680797]],
+
+       [[ 0.88203539,  0.77670193,  0.02739895,  0.40008823,  0.4711357 ,
+          0.70242502],
+        [ 0.66830687,  0.77383461,  0.5103475 ,  0.519137  ,  0.61810599,
+          0.70447707],
+        [ 0.54619101,  0.29617564,  0.15160879,  0.45387182,  0.26835684,
+          0.28735945]],
+
+       [[ 0.40002148,  0.10185109,  0.25811443,  0.50355387,  0.20603974,
+          0.12099583],
+        [ 0.12819782,  0.15467446,  0.64767747,  0.46777698,  0.33027892,
+          0.16160116],
+        [ 0.65747762,  0.13960791,  0.18994054,  0.68637679,  0.2382727 ,
+          0.16680031]]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-cyan-fg">  File </span><span class="ansi-green-fg">&#34;&lt;ipython-input-27-b29c862b6e6b&gt;&#34;</span><span class="ansi-cyan-fg">, line </span><span class="ansi-green-fg">1</span>
+<span class="ansi-red-fg">    (*learnt_factors[2])</span>
+     ^
+<span class="ansi-red-fg">SyntaxError</span><span class="ansi-red-fg">:</span> invalid syntax
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

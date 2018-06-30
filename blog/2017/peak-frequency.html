@@ -1,0 +1,2692 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Nipun Batra</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[11]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([ 0.08246289,  0.03448665,  0.06605913, ...,  0.06747956,
+        0.07512211,  0.00221654])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[112]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_sine</span><span class="p">(</span><span class="n">frequency</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">frequency</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">500</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span><span class="o">/</span><span class="mi">20</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[117]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">create_sine</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
+<span class="c1">#plt.plot(np.sin(np.linspace(0, 400*np.pi, 2000)))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[117]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>[&lt;matplotlib.lines.Line2D at 0x182ab381d0&gt;]</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+H1cmuJxgyd4IAAAAAElFTkSuQmCC
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[119]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">reps</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[120]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">create_sine</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">train_y</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[122]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_x</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[122]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(19800, 500)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[123]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">LSTM</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[124]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">input_series</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,),</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">)</span>
+<span class="n">dense_1</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">)(</span><span class="n">input_series</span><span class="p">)</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">dense_1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">input_series</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span>
+<span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[124]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="215pt" viewBox="0.00 0.00 262.45 215.00" width="262pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 211)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-211 258.452,-211 258.452,4 -4,4" stroke="none"/>
+<!-- 103795348816 -->
+<g class="node" id="node1"><title>103795348816</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-162.5 0,-206.5 254.452,-206.5 254.452,-162.5 0,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="57.5674" y="-180.3">Input: InputLayer</text>
+<polyline fill="none" points="115.135,-162.5 115.135,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="142.969" y="-191.3">input:</text>
+<polyline fill="none" points="115.135,-184.5 170.804,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="142.969" y="-169.3">output:</text>
+<polyline fill="none" points="170.804,-162.5 170.804,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="212.628" y="-191.3">(None, 500)</text>
+<polyline fill="none" points="170.804,-184.5 254.452,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="212.628" y="-169.3">(None, 500)</text>
+</g>
+<!-- 103795348368 -->
+<g class="node" id="node2"><title>103795348368</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="1.94141,-81.5 1.94141,-125.5 252.511,-125.5 252.511,-81.5 1.94141,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="57.5674" y="-99.3">dense_13: Dense</text>
+<polyline fill="none" points="113.193,-81.5 113.193,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="141.028" y="-110.3">input:</text>
+<polyline fill="none" points="113.193,-103.5 168.862,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="141.028" y="-88.3">output:</text>
+<polyline fill="none" points="168.862,-81.5 168.862,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.687" y="-110.3">(None, 500)</text>
+<polyline fill="none" points="168.862,-103.5 252.511,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.687" y="-88.3">(None, 100)</text>
+</g>
+<!-- 103795348816&#45;&gt;103795348368 -->
+<g class="edge" id="edge1"><title>103795348816-&gt;103795348368</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M127.226,-162.329C127.226,-154.183 127.226,-144.699 127.226,-135.797" fill="none" stroke="black"/>
+<polygon fill="black" points="130.726,-135.729 127.226,-125.729 123.726,-135.729 130.726,-135.729" stroke="black"/>
+</g>
+<!-- 103794052512 -->
+<g class="node" id="node3"><title>103794052512</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="1.94141,-0.5 1.94141,-44.5 252.511,-44.5 252.511,-0.5 1.94141,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="57.5674" y="-18.3">dense_14: Dense</text>
+<polyline fill="none" points="113.193,-0.5 113.193,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="141.028" y="-29.3">input:</text>
+<polyline fill="none" points="113.193,-22.5 168.862,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="141.028" y="-7.3">output:</text>
+<polyline fill="none" points="168.862,-0.5 168.862,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.687" y="-29.3">(None, 100)</text>
+<polyline fill="none" points="168.862,-22.5 252.511,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="210.687" y="-7.3">(None, 1)</text>
+</g>
+<!-- 103795348368&#45;&gt;103794052512 -->
+<g class="edge" id="edge2"><title>103795348368-&gt;103794052512</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M127.226,-81.3294C127.226,-73.1826 127.226,-63.6991 127.226,-54.7971" fill="none" stroke="black"/>
+<polygon fill="black" points="130.726,-54.729 127.226,-44.729 123.726,-54.729 130.726,-54.729" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[125]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[126]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_x</span><span class="p">[:</span><span class="mi">8000</span><span class="p">],</span> <span class="n">train_y</span><span class="p">[:</span><span class="mi">8000</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Epoch 1/10
+8000/8000 [==============================] - 1s 95us/step - loss: 34.0555
+Epoch 2/10
+8000/8000 [==============================] - 0s 41us/step - loss: 27.8065
+Epoch 3/10
+8000/8000 [==============================] - 0s 41us/step - loss: 27.5888
+Epoch 4/10
+8000/8000 [==============================] - 0s 42us/step - loss: 27.5581
+Epoch 5/10
+8000/8000 [==============================] - 0s 42us/step - loss: 27.5582
+Epoch 6/10
+8000/8000 [==============================] - 0s 42us/step - loss: 27.5268
+Epoch 7/10
+8000/8000 [==============================] - 0s 41us/step - loss: 27.5132
+Epoch 8/10
+8000/8000 [==============================] - 0s 42us/step - loss: 27.4976
+Epoch 9/10
+8000/8000 [==============================] - 0s 55us/step - loss: 27.4876
+Epoch 10/10
+8000/8000 [==============================] - 0s 44us/step - loss: 27.5011
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[126]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;keras.callbacks.History at 0x182ab67d68&gt;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[127]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">train_x</span><span class="p">[</span><span class="mi">9000</span><span class="p">:</span><span class="mi">9005</span><span class="p">]),</span> <span class="n">train_y</span><span class="p">[</span><span class="mi">9000</span><span class="p">:</span><span class="mi">9005</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>[[ 90.86216736]
+ [  0.        ]
+ [ 94.29138184]
+ [  0.        ]
+ [  0.        ]] [91 92 93 94 95]
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[128]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">SVG</span>
+<span class="kn">from</span> <span class="nn">keras.utils.vis_utils</span> <span class="k">import</span> <span class="n">model_to_dot</span>
+
+<span class="n">input_series</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">)</span>
+<span class="n">lstm</span> <span class="o">=</span> <span class="n">LSTM</span><span class="p">(</span><span class="mi">10</span><span class="p">)(</span><span class="n">input_series</span><span class="p">)</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)(</span><span class="n">lstm</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">input_series</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span>
+<span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[128]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="215pt" viewBox="0.00 0.00 276.45 215.00" width="276pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 211)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-211 272.452,-211 272.452,4 -4,4" stroke="none"/>
+<!-- 103693109232 -->
+<g class="node" id="node1"><title>103693109232</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-162.5 0,-206.5 268.452,-206.5 268.452,-162.5 0,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="57.5674" y="-180.3">Input: InputLayer</text>
+<polyline fill="none" points="115.135,-162.5 115.135,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="142.969" y="-191.3">input:</text>
+<polyline fill="none" points="115.135,-184.5 170.804,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="142.969" y="-169.3">output:</text>
+<polyline fill="none" points="170.804,-162.5 170.804,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="219.628" y="-191.3">(None, 500, 1)</text>
+<polyline fill="none" points="170.804,-184.5 268.452,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="219.628" y="-169.3">(None, 500, 1)</text>
+</g>
+<!-- 103693109624 -->
+<g class="node" id="node2"><title>103693109624</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="8.14502,-81.5 8.14502,-125.5 260.307,-125.5 260.307,-81.5 8.14502,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="57.5674" y="-99.3">lstm_7: LSTM</text>
+<polyline fill="none" points="106.99,-81.5 106.99,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="134.824" y="-110.3">input:</text>
+<polyline fill="none" points="106.99,-103.5 162.659,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="134.824" y="-88.3">output:</text>
+<polyline fill="none" points="162.659,-81.5 162.659,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="211.483" y="-110.3">(None, 500, 1)</text>
+<polyline fill="none" points="162.659,-103.5 260.307,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="211.483" y="-88.3">(None, 10)</text>
+</g>
+<!-- 103693109232&#45;&gt;103693109624 -->
+<g class="edge" id="edge1"><title>103693109232-&gt;103693109624</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M134.226,-162.329C134.226,-154.183 134.226,-144.699 134.226,-135.797" fill="none" stroke="black"/>
+<polygon fill="black" points="137.726,-135.729 134.226,-125.729 130.726,-135.729 137.726,-135.729" stroke="black"/>
+</g>
+<!-- 103693109792 -->
+<g class="node" id="node3"><title>103693109792</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="12.4414,-0.5 12.4414,-44.5 256.011,-44.5 256.011,-0.5 12.4414,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="68.0674" y="-18.3">dense_15: Dense</text>
+<polyline fill="none" points="123.693,-0.5 123.693,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="151.528" y="-29.3">input:</text>
+<polyline fill="none" points="123.693,-22.5 179.362,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="151.528" y="-7.3">output:</text>
+<polyline fill="none" points="179.362,-0.5 179.362,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="217.687" y="-29.3">(None, 10)</text>
+<polyline fill="none" points="179.362,-22.5 256.011,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="217.687" y="-7.3">(None, 1)</text>
+</g>
+<!-- 103693109624&#45;&gt;103693109792 -->
+<g class="edge" id="edge2"><title>103693109624-&gt;103693109792</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M134.226,-81.3294C134.226,-73.1826 134.226,-63.6991 134.226,-54.7971" fill="none" stroke="black"/>
+<polygon fill="black" points="137.726,-54.729 134.226,-44.729 130.726,-54.729 137.726,-54.729" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[129]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[130]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+Input (InputLayer)           (None, 500, 1)            0         
+_________________________________________________________________
+lstm_7 (LSTM)                (None, 10)                480       
+_________________________________________________________________
+dense_15 (Dense)             (None, 1)                 11        
+=================================================================
+Total params: 491
+Trainable params: 491
+Non-trainable params: 0
+_________________________________________________________________
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[132]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_x</span><span class="p">[:</span><span class="mi">5000</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">train_y</span><span class="p">[:</span><span class="mi">5000</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train on 4500 samples, validate on 500 samples
+Epoch 1/100
+4500/4500 [==============================] - 47s 10ms/step - loss: 46.9805 - val_loss: 43.6112
+Epoch 2/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 41.8079 - val_loss: 41.1363
+Epoch 3/100
+4500/4500 [==============================] - 47s 10ms/step - loss: 40.2181 - val_loss: 39.7751
+Epoch 4/100
+4500/4500 [==============================] - 48s 11ms/step - loss: 38.9459 - val_loss: 38.5636
+Epoch 5/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 37.7969 - val_loss: 37.4569
+Epoch 6/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 36.7381 - val_loss: 36.4227
+Epoch 7/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 35.7534 - val_loss: 35.4651
+Epoch 8/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 34.8348 - val_loss: 34.5703
+Epoch 9/100
+4500/4500 [==============================] - 47s 10ms/step - loss: 33.9760 - val_loss: 33.7274
+Epoch 10/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 33.1758 - val_loss: 32.9456
+Epoch 11/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 32.4320 - val_loss: 32.2127
+Epoch 12/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 31.7336 - val_loss: 31.5255
+Epoch 13/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 31.0855 - val_loss: 30.8868
+Epoch 14/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 30.4828 - val_loss: 30.2925
+Epoch 15/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 29.9235 - val_loss: 29.7460
+Epoch 16/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 29.4063 - val_loss: 29.2277
+Epoch 17/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 28.9261 - val_loss: 28.7573
+Epoch 18/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 28.4809 - val_loss: 28.3089
+Epoch 19/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 28.0722 - val_loss: 27.9047
+Epoch 20/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 27.6974 - val_loss: 27.5296
+Epoch 21/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 27.3532 - val_loss: 27.1891
+Epoch 22/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 27.0413 - val_loss: 26.8762
+Epoch 23/100
+4500/4500 [==============================] - 47s 10ms/step - loss: 26.7565 - val_loss: 26.5882
+Epoch 24/100
+4500/4500 [==============================] - 49s 11ms/step - loss: 26.4986 - val_loss: 26.3367
+Epoch 25/100
+4500/4500 [==============================] - 47s 10ms/step - loss: 26.2652 - val_loss: 26.0984
+Epoch 26/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 26.0565 - val_loss: 25.8885
+Epoch 27/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 25.8704 - val_loss: 25.6969
+Epoch 28/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 25.7056 - val_loss: 25.5321
+Epoch 29/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 25.5609 - val_loss: 25.3734
+Epoch 30/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 25.4349 - val_loss: 25.2495
+Epoch 31/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 25.3232 - val_loss: 25.1349
+Epoch 32/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 25.2292 - val_loss: 25.0301
+Epoch 33/100
+4500/4500 [==============================] - 45s 10ms/step - loss: 25.1491 - val_loss: 24.9475
+Epoch 34/100
+4500/4500 [==============================] - 46s 10ms/step - loss: 25.0781 - val_loss: 24.8749
+Epoch 35/100
+2016/4500 [============&gt;.................] - ETA: 24s - loss: 24.9584</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">KeyboardInterrupt</span>                         Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-132-0a3401e89c63&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model<span class="ansi-blue-fg">.</span>fit<span class="ansi-blue-fg">(</span>train_x<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">5000</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>reshape<span class="ansi-blue-fg">(</span><span class="ansi-cyan-fg">5000</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">500</span><span class="ansi-blue-fg">,</span> <span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> train_y<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">5000</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">,</span> epochs<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">100</span><span class="ansi-blue-fg">,</span> validation_split<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">0.1</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">fit</span><span class="ansi-blue-fg">(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1655</span>                               initial_epoch<span class="ansi-blue-fg">=</span>initial_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">   1656</span>                               steps_per_epoch<span class="ansi-blue-fg">=</span>steps_per_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1657</span><span class="ansi-red-fg">                               validation_steps=validation_steps)
+</span><span class="ansi-green-intense-fg ansi-bold">   1658</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1659</span>     def evaluate(self, x=None, y=None,
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">_fit_loop</span><span class="ansi-blue-fg">(self, f, ins, out_labels, batch_size, epochs, verbose, callbacks, val_f, val_ins, shuffle, callback_metrics, initial_epoch, steps_per_epoch, validation_steps)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1211</span>                     batch_logs<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#39;size&#39;</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> len<span class="ansi-blue-fg">(</span>batch_ids<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1212</span>                     callbacks<span class="ansi-blue-fg">.</span>on_batch_begin<span class="ansi-blue-fg">(</span>batch_index<span class="ansi-blue-fg">,</span> batch_logs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">-&gt; 1213</span><span class="ansi-red-fg">                     </span>outs <span class="ansi-blue-fg">=</span> f<span class="ansi-blue-fg">(</span>ins_batch<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1214</span>                     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> isinstance<span class="ansi-blue-fg">(</span>outs<span class="ansi-blue-fg">,</span> list<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1215</span>                         outs <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span>outs<span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py</span> in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, inputs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2355</span>         session <span class="ansi-blue-fg">=</span> get_session<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2356</span>         updated = session.run(fetches=fetches, feed_dict=feed_dict,
+<span class="ansi-green-fg">-&gt; 2357</span><span class="ansi-red-fg">                               **self.session_kwargs)
+</span><span class="ansi-green-intense-fg ansi-bold">   2358</span>         <span class="ansi-green-fg">return</span> updated<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span>len<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>outputs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">]</span>
+<span class="ansi-green-intense-fg ansi-bold">   2359</span> 
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">run</span><span class="ansi-blue-fg">(self, fetches, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">    887</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    888</span>       result = self._run(None, fetches, feed_dict, options_ptr,
+<span class="ansi-green-fg">--&gt; 889</span><span class="ansi-red-fg">                          run_metadata_ptr)
+</span><span class="ansi-green-intense-fg ansi-bold">    890</span>       <span class="ansi-green-fg">if</span> run_metadata<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    891</span>         proto_data <span class="ansi-blue-fg">=</span> tf_session<span class="ansi-blue-fg">.</span>TF_GetBuffer<span class="ansi-blue-fg">(</span>run_metadata_ptr<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_run</span><span class="ansi-blue-fg">(self, handle, fetches, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1118</span>     <span class="ansi-green-fg">if</span> final_fetches <span class="ansi-green-fg">or</span> final_targets <span class="ansi-green-fg">or</span> <span class="ansi-blue-fg">(</span>handle <span class="ansi-green-fg">and</span> feed_dict_tensor<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1119</span>       results = self._do_run(handle, final_targets, final_fetches,
+<span class="ansi-green-fg">-&gt; 1120</span><span class="ansi-red-fg">                              feed_dict_tensor, options, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1121</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1122</span>       results <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_do_run</span><span class="ansi-blue-fg">(self, handle, target_list, fetch_list, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1315</span>     <span class="ansi-green-fg">if</span> handle <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1316</span>       return self._do_call(_run_fn, self._session, feeds, fetches, targets,
+<span class="ansi-green-fg">-&gt; 1317</span><span class="ansi-red-fg">                            options, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1318</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1319</span>       <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_do_call<span class="ansi-blue-fg">(</span>_prun_fn<span class="ansi-blue-fg">,</span> self<span class="ansi-blue-fg">.</span>_session<span class="ansi-blue-fg">,</span> handle<span class="ansi-blue-fg">,</span> feeds<span class="ansi-blue-fg">,</span> fetches<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_do_call</span><span class="ansi-blue-fg">(self, fn, *args)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1321</span>   <span class="ansi-green-fg">def</span> _do_call<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> fn<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1322</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1323</span><span class="ansi-red-fg">       </span><span class="ansi-green-fg">return</span> fn<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1324</span>     <span class="ansi-green-fg">except</span> errors<span class="ansi-blue-fg">.</span>OpError <span class="ansi-green-fg">as</span> e<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1325</span>       message <span class="ansi-blue-fg">=</span> compat<span class="ansi-blue-fg">.</span>as_text<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">.</span>message<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_run_fn</span><span class="ansi-blue-fg">(session, feed_dict, fetch_list, target_list, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1300</span>           return tf_session.TF_Run(session, options,
+<span class="ansi-green-intense-fg ansi-bold">   1301</span>                                    feed_dict<span class="ansi-blue-fg">,</span> fetch_list<span class="ansi-blue-fg">,</span> target_list<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1302</span><span class="ansi-red-fg">                                    status, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1303</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1304</span>     <span class="ansi-green-fg">def</span> _prun_fn<span class="ansi-blue-fg">(</span>session<span class="ansi-blue-fg">,</span> handle<span class="ansi-blue-fg">,</span> feed_dict<span class="ansi-blue-fg">,</span> fetch_list<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">KeyboardInterrupt</span>: </pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[134]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">train_x</span><span class="p">[</span><span class="mi">5000</span><span class="p">:</span><span class="mi">6000</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[134]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.456604  ],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.456604  ],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782],
+       [ 44.45660782]], dtype=float32)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[83]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_x</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[83]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(29900, 2000)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

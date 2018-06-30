@@ -1,0 +1,2696 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Non-negative matrix factorisation using non-negative least squares</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="http://www.cs.virginia.edu/~nb2cz/files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Non-negative-matrix-factorisation-using-non-negative-least-squares">Non-negative matrix factorisation using non-negative least squares<a class="anchor-link" href="#Non-negative-matrix-factorisation-using-non-negative-least-squares">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;/Users/nipun/Downloads/ml-100k/u.data&quot;</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="s2">&quot;user_id,item_id,rating,timestamp&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[29]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>196</td>
+      <td>242</td>
+      <td>3</td>
+      <td>881250949</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>186</td>
+      <td>302</td>
+      <td>3</td>
+      <td>891717742</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>22</td>
+      <td>377</td>
+      <td>1</td>
+      <td>878887116</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>244</td>
+      <td>51</td>
+      <td>2</td>
+      <td>880606923</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>166</td>
+      <td>346</td>
+      <td>1</td>
+      <td>886397596</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()),</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+
+<span class="c1">#len(test_1.user_id.unique()), len(test_1.item_id.unique())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[30]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(943, 1682)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[40]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">values</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">values</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[41]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[41]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>195</td>
+      <td>241</td>
+      <td>3</td>
+      <td>881250949</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>185</td>
+      <td>301</td>
+      <td>3</td>
+      <td>891717742</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>21</td>
+      <td>376</td>
+      <td>1</td>
+      <td>878887116</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>243</td>
+      <td>50</td>
+      <td>2</td>
+      <td>880606923</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>165</td>
+      <td>345</td>
+      <td>1</td>
+      <td>886397596</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[44]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">train_test_split</span>
+
+<span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[45]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[45]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>72238</th>
+      <td>261</td>
+      <td>254</td>
+      <td>3</td>
+      <td>879790816</td>
+    </tr>
+    <tr>
+      <th>32115</th>
+      <td>187</td>
+      <td>467</td>
+      <td>4</td>
+      <td>875073329</td>
+    </tr>
+    <tr>
+      <th>85941</th>
+      <td>221</td>
+      <td>471</td>
+      <td>2</td>
+      <td>877563998</td>
+    </tr>
+    <tr>
+      <th>20205</th>
+      <td>36</td>
+      <td>67</td>
+      <td>5</td>
+      <td>880915902</td>
+    </tr>
+    <tr>
+      <th>9416</th>
+      <td>127</td>
+      <td>189</td>
+      <td>4</td>
+      <td>879967016</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[46]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[46]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_id</th>
+      <th>item_id</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>49813</th>
+      <td>392</td>
+      <td>41</td>
+      <td>4</td>
+      <td>889554976</td>
+    </tr>
+    <tr>
+      <th>9894</th>
+      <td>84</td>
+      <td>448</td>
+      <td>4</td>
+      <td>882813248</td>
+    </tr>
+    <tr>
+      <th>30899</th>
+      <td>39</td>
+      <td>895</td>
+      <td>4</td>
+      <td>889041402</td>
+    </tr>
+    <tr>
+      <th>47133</th>
+      <td>479</td>
+      <td>704</td>
+      <td>4</td>
+      <td>891208520</td>
+    </tr>
+    <tr>
+      <th>79018</th>
+      <td>505</td>
+      <td>579</td>
+      <td>3</td>
+      <td>874875062</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[121]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">keras.constraints</span> <span class="k">import</span> <span class="n">non_neg</span>
+<span class="n">n_users</span><span class="p">,</span> <span class="n">n_movies</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()),</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">item_id</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[213]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">movie_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Item&#39;</span><span class="p">)</span>
+<span class="n">movie_embedding</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_movies</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">embeddings_constraint</span><span class="o">=</span><span class="n">non_neg</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;NonNeg-Movie-Embedding&#39;</span><span class="p">)(</span><span class="n">movie_input</span><span class="p">)</span>
+<span class="n">movie_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenMovies&#39;</span><span class="p">)(</span><span class="n">movie_embedding</span><span class="p">)</span>
+<span class="c1">#movie_vec = keras.layers.Dropout(0.5)(movie_vec)</span>
+
+<span class="c1"># Same thing for the users</span>
+<span class="n">user_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Movie&#39;</span><span class="p">)</span>
+<span class="n">user_vec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FlattenUsers&#39;</span><span class="p">)(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">n_users</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;NonNeg-User-Embedding&#39;</span><span class="p">,</span><span class="n">embeddings_constraint</span><span class="o">=</span><span class="n">non_neg</span><span class="p">())(</span><span class="n">user_input</span><span class="p">))</span>
+<span class="c1">#user_vec = keras.layers.Dropout(0.5)(user_vec)</span>
+
+<span class="c1"># Next, we join them all together and put them</span>
+<span class="c1"># through a pretty standard deep learning architecture</span>
+<span class="c1">#prod = keras.layers.merge([movie_vec, user_vec], mode=&#39;dot&#39;,name=&#39;DotProduct&#39;)</span>
+
+<span class="c1">#model = keras.Model([user_input, movie_input], prod)</span>
+
+<span class="c1">#model.compile(&#39;adam&#39;, &#39;mean_squared_error&#39;)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[172]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">SVG</span>
+<span class="kn">from</span> <span class="nn">keras.utils.vis_utils</span> <span class="k">import</span> <span class="n">model_to_dot</span>
+
+<span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>  <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_layer_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rankdir</span><span class="o">=</span><span class="s1">&#39;HB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[172]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="296pt" viewBox="0.00 0.00 785.91 296.00" width="786pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 292)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-292 781.912,-292 781.912,4 -4,4" stroke="none"/>
+<!-- 112299561760 -->
+<g class="node" id="node1"><title>112299561760</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="74.2759,-243.5 74.2759,-287.5 310.832,-287.5 310.832,-243.5 74.2759,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="129.895" y="-261.3">Item: InputLayer</text>
+<polyline fill="none" points="185.514,-243.5 185.514,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="213.349" y="-272.3">input:</text>
+<polyline fill="none" points="185.514,-265.5 241.183,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="213.349" y="-250.3">output:</text>
+<polyline fill="none" points="241.183,-243.5 241.183,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="276.007" y="-272.3">(None, 1)</text>
+<polyline fill="none" points="241.183,-265.5 310.832,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="276.007" y="-250.3">(None, 1)</text>
+</g>
+<!-- 112299561704 -->
+<g class="node" id="node3"><title>112299561704</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-162.5 0,-206.5 385.107,-206.5 385.107,-162.5 0,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="122.895" y="-180.3">NonNeg-Movie-Embedding: Embedding</text>
+<polyline fill="none" points="245.79,-162.5 245.79,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.625" y="-191.3">input:</text>
+<polyline fill="none" points="245.79,-184.5 301.459,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.625" y="-169.3">output:</text>
+<polyline fill="none" points="301.459,-162.5 301.459,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="343.283" y="-191.3">(None, 1)</text>
+<polyline fill="none" points="301.459,-184.5 385.107,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="343.283" y="-169.3">(None, 1, 3)</text>
+</g>
+<!-- 112299561760&#45;&gt;112299561704 -->
+<g class="edge" id="edge1"><title>112299561760-&gt;112299561704</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M192.554,-243.329C192.554,-235.183 192.554,-225.699 192.554,-216.797" fill="none" stroke="black"/>
+<polygon fill="black" points="196.054,-216.729 192.554,-206.729 189.054,-216.729 196.054,-216.729" stroke="black"/>
+</g>
+<!-- 112299562768 -->
+<g class="node" id="node2"><title>112299562768</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="466.828,-243.5 466.828,-287.5 714.28,-287.5 714.28,-243.5 466.828,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="527.895" y="-261.3">Movie: InputLayer</text>
+<polyline fill="none" points="588.962,-243.5 588.962,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="616.797" y="-272.3">input:</text>
+<polyline fill="none" points="588.962,-265.5 644.631,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="616.797" y="-250.3">output:</text>
+<polyline fill="none" points="644.631,-243.5 644.631,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="679.456" y="-272.3">(None, 1)</text>
+<polyline fill="none" points="644.631,-265.5 714.28,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="679.456" y="-250.3">(None, 1)</text>
+</g>
+<!-- 112299563216 -->
+<g class="node" id="node4"><title>112299563216</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="403.195,-162.5 403.195,-206.5 777.912,-206.5 777.912,-162.5 403.195,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="520.895" y="-180.3">NonNeg-User-Embedding: Embedding</text>
+<polyline fill="none" points="638.595,-162.5 638.595,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="666.429" y="-191.3">input:</text>
+<polyline fill="none" points="638.595,-184.5 694.264,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="666.429" y="-169.3">output:</text>
+<polyline fill="none" points="694.264,-162.5 694.264,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="736.088" y="-191.3">(None, 1)</text>
+<polyline fill="none" points="694.264,-184.5 777.912,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="736.088" y="-169.3">(None, 1, 3)</text>
+</g>
+<!-- 112299562768&#45;&gt;112299563216 -->
+<g class="edge" id="edge2"><title>112299562768-&gt;112299563216</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M590.554,-243.329C590.554,-235.183 590.554,-225.699 590.554,-216.797" fill="none" stroke="black"/>
+<polygon fill="black" points="594.054,-216.729 590.554,-206.729 587.054,-216.729 594.054,-216.729" stroke="black"/>
+</g>
+<!-- 112299562432 -->
+<g class="node" id="node5"><title>112299562432</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="102.317,-81.5 102.317,-125.5 384.79,-125.5 384.79,-81.5 102.317,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="173.895" y="-99.3">FlattenMovies: Flatten</text>
+<polyline fill="none" points="245.473,-81.5 245.473,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.307" y="-110.3">input:</text>
+<polyline fill="none" points="245.473,-103.5 301.142,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.307" y="-88.3">output:</text>
+<polyline fill="none" points="301.142,-81.5 301.142,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="342.966" y="-110.3">(None, 1, 3)</text>
+<polyline fill="none" points="301.142,-103.5 384.79,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="342.966" y="-88.3">(None, 3)</text>
+</g>
+<!-- 112299561704&#45;&gt;112299562432 -->
+<g class="edge" id="edge3"><title>112299561704-&gt;112299562432</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M206.221,-162.329C211.766,-153.74 218.27,-143.664 224.283,-134.351" fill="none" stroke="black"/>
+<polygon fill="black" points="227.366,-136.029 229.849,-125.729 221.485,-132.232 227.366,-136.029" stroke="black"/>
+</g>
+<!-- 112299564056 -->
+<g class="node" id="node6"><title>112299564056</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="428.376,-81.5 428.376,-125.5 700.731,-125.5 700.731,-81.5 428.376,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="494.895" y="-99.3">FlattenUsers: Flatten</text>
+<polyline fill="none" points="561.414,-81.5 561.414,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="589.249" y="-110.3">input:</text>
+<polyline fill="none" points="561.414,-103.5 617.083,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="589.249" y="-88.3">output:</text>
+<polyline fill="none" points="617.083,-81.5 617.083,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="658.907" y="-110.3">(None, 1, 3)</text>
+<polyline fill="none" points="617.083,-103.5 700.731,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="658.907" y="-88.3">(None, 3)</text>
+</g>
+<!-- 112299563216&#45;&gt;112299564056 -->
+<g class="edge" id="edge4"><title>112299563216-&gt;112299564056</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M583.586,-162.329C580.876,-154.094 577.716,-144.493 574.759,-135.507" fill="none" stroke="black"/>
+<polygon fill="black" points="577.991,-134.134 571.54,-125.729 571.342,-136.322 577.991,-134.134" stroke="black"/>
+</g>
+<!-- 112299562040 -->
+<g class="node" id="node7"><title>112299562040</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="243.792,-0.5 243.792,-44.5 563.315,-44.5 563.315,-0.5 243.792,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="305.909" y="-18.3">DotProduct: Merge</text>
+<polyline fill="none" points="368.025,-0.5 368.025,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="395.86" y="-29.3">input:</text>
+<polyline fill="none" points="368.025,-22.5 423.694,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="395.86" y="-7.3">output:</text>
+<polyline fill="none" points="423.694,-0.5 423.694,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="493.505" y="-29.3">[(None, 3), (None, 3)]</text>
+<polyline fill="none" points="423.694,-22.5 563.315,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="493.019" y="-7.3">(None, 1)</text>
+</g>
+<!-- 112299562432&#45;&gt;112299562040 -->
+<g class="edge" id="edge5"><title>112299562432-&gt;112299562040</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M286.431,-81.3294C306.509,-71.416 330.595,-59.5234 351.69,-49.1077" fill="none" stroke="black"/>
+<polygon fill="black" points="353.419,-52.1575 360.836,-44.5919 350.32,-45.8809 353.419,-52.1575" stroke="black"/>
+</g>
+<!-- 112299564056&#45;&gt;112299562040 -->
+<g class="edge" id="edge6"><title>112299564056-&gt;112299562040</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M521.409,-81.3294C501.205,-71.416 476.969,-59.5234 455.742,-49.1077" fill="none" stroke="black"/>
+<polygon fill="black" points="457.058,-45.8549 446.538,-44.5919 453.974,-52.1392 457.058,-45.8549" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[194]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">train</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">train</span><span class="o">.</span><span class="n">item_id</span><span class="p">],</span> <span class="n">train</span><span class="o">.</span><span class="n">rating</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Epoch 1/4
+80000/80000 [==============================] - 2s 27us/step - loss: 0.8712
+Epoch 2/4
+80000/80000 [==============================] - 2s 27us/step - loss: 0.8691
+Epoch 3/4
+80000/80000 [==============================] - 2s 27us/step - loss: 0.8674
+Epoch 4/4
+80000/80000 [==============================] - 2s 27us/step - loss: 0.8659
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[194]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;keras.callbacks.History at 0x1a21d85a58&gt;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[195]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">test</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">item_id</span><span class="p">]),</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">y_true</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">rating</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[196]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">mean_absolute_error</span>
+<span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_hat</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[196]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.72135000000000005</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[185]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[185]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;keras.layers.embeddings.Embedding at 0x1a259358d0&gt;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[190]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;NonNeg-Movie-Embedding&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[190]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ 1.1498698 ,  1.14439464,  1.17320848],
+       [ 0.99975103,  1.00937903,  1.01757777],
+       [ 0.95532507,  0.9209519 ,  0.91296041],
+       ..., 
+       [-0.        , -0.        , -0.        ],
+       [-0.        ,  0.04933608, -0.        ],
+       [-0.        , -0.        , -0.        ]], dtype=float32)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[214]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">concat</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">movie_vec</span><span class="p">,</span> <span class="n">user_vec</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;concat&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Concat&#39;</span><span class="p">)</span>
+<span class="n">dense</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;FullyConnected&#39;</span><span class="p">)(</span><span class="n">concat</span><span class="p">)</span>
+<span class="n">dropout</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dropout&#39;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activation&#39;</span><span class="p">)(</span><span class="n">dense</span><span class="p">)</span>
+
+
+<span class="n">model_2</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">([</span><span class="n">user_input</span><span class="p">,</span> <span class="n">movie_input</span><span class="p">],</span> <span class="n">result</span><span class="p">)</span>
+
+<span class="n">model_2</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_squared_error&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>/Users/nipun/anaconda3/lib/python3.6/site-packages/ipykernel_launcher.py:2: UserWarning: The `merge` function is deprecated and will be removed after 08/2017. Use instead layers from `keras.layers.merge`, e.g. `add`, `concatenate`, etc.
+  
+/Users/nipun/anaconda3/lib/python3.6/site-packages/keras/legacy/layers.py:458: UserWarning: The `Merge` layer is deprecated and will be removed after 08/2017. Use instead layers from `keras.layers.merge`, e.g. `add`, `concatenate`, etc.
+  name=name)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[215]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">SVG</span><span class="p">(</span><span class="n">model_to_dot</span><span class="p">(</span><span class="n">model_2</span><span class="p">,</span>  <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_layer_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rankdir</span><span class="o">=</span><span class="s1">&#39;HB&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;svg&#39;</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[215]:</div>
+
+
+
+<div class="output_svg output_subarea output_execute_result">
+<svg height="458pt" viewBox="0.00 0.00 785.91 458.00" width="786pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 454)">
+<title>G</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="white" points="-4,4 -4,-454 781.912,-454 781.912,4 -4,4" stroke="none"/>
+<!-- 112303689232 -->
+<g class="node" id="node1"><title>112303689232</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="74.2759,-405.5 74.2759,-449.5 310.832,-449.5 310.832,-405.5 74.2759,-405.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="129.895" y="-423.3">Item: InputLayer</text>
+<polyline fill="none" points="185.514,-405.5 185.514,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="213.349" y="-434.3">input:</text>
+<polyline fill="none" points="185.514,-427.5 241.183,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="213.349" y="-412.3">output:</text>
+<polyline fill="none" points="241.183,-405.5 241.183,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="276.007" y="-434.3">(None, 1)</text>
+<polyline fill="none" points="241.183,-427.5 310.832,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="276.007" y="-412.3">(None, 1)</text>
+</g>
+<!-- 112303689176 -->
+<g class="node" id="node3"><title>112303689176</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="0,-324.5 0,-368.5 385.107,-368.5 385.107,-324.5 0,-324.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="122.895" y="-342.3">NonNeg-Movie-Embedding: Embedding</text>
+<polyline fill="none" points="245.79,-324.5 245.79,-368.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.625" y="-353.3">input:</text>
+<polyline fill="none" points="245.79,-346.5 301.459,-346.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.625" y="-331.3">output:</text>
+<polyline fill="none" points="301.459,-324.5 301.459,-368.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="343.283" y="-353.3">(None, 1)</text>
+<polyline fill="none" points="301.459,-346.5 385.107,-346.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="343.283" y="-331.3">(None, 1, 8)</text>
+</g>
+<!-- 112303689232&#45;&gt;112303689176 -->
+<g class="edge" id="edge1"><title>112303689232-&gt;112303689176</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M192.554,-405.329C192.554,-397.183 192.554,-387.699 192.554,-378.797" fill="none" stroke="black"/>
+<polygon fill="black" points="196.054,-378.729 192.554,-368.729 189.054,-378.729 196.054,-378.729" stroke="black"/>
+</g>
+<!-- 112303689680 -->
+<g class="node" id="node2"><title>112303689680</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="466.828,-405.5 466.828,-449.5 714.28,-449.5 714.28,-405.5 466.828,-405.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="527.895" y="-423.3">Movie: InputLayer</text>
+<polyline fill="none" points="588.962,-405.5 588.962,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="616.797" y="-434.3">input:</text>
+<polyline fill="none" points="588.962,-427.5 644.631,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="616.797" y="-412.3">output:</text>
+<polyline fill="none" points="644.631,-405.5 644.631,-449.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="679.456" y="-434.3">(None, 1)</text>
+<polyline fill="none" points="644.631,-427.5 714.28,-427.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="679.456" y="-412.3">(None, 1)</text>
+</g>
+<!-- 112305946864 -->
+<g class="node" id="node4"><title>112305946864</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="403.195,-324.5 403.195,-368.5 777.912,-368.5 777.912,-324.5 403.195,-324.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="520.895" y="-342.3">NonNeg-User-Embedding: Embedding</text>
+<polyline fill="none" points="638.595,-324.5 638.595,-368.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="666.429" y="-353.3">input:</text>
+<polyline fill="none" points="638.595,-346.5 694.264,-346.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="666.429" y="-331.3">output:</text>
+<polyline fill="none" points="694.264,-324.5 694.264,-368.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="736.088" y="-353.3">(None, 1)</text>
+<polyline fill="none" points="694.264,-346.5 777.912,-346.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="736.088" y="-331.3">(None, 1, 3)</text>
+</g>
+<!-- 112303689680&#45;&gt;112305946864 -->
+<g class="edge" id="edge2"><title>112303689680-&gt;112305946864</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M590.554,-405.329C590.554,-397.183 590.554,-387.699 590.554,-378.797" fill="none" stroke="black"/>
+<polygon fill="black" points="594.054,-378.729 590.554,-368.729 587.054,-378.729 594.054,-378.729" stroke="black"/>
+</g>
+<!-- 112303689288 -->
+<g class="node" id="node5"><title>112303689288</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="102.317,-243.5 102.317,-287.5 384.79,-287.5 384.79,-243.5 102.317,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="173.895" y="-261.3">FlattenMovies: Flatten</text>
+<polyline fill="none" points="245.473,-243.5 245.473,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.307" y="-272.3">input:</text>
+<polyline fill="none" points="245.473,-265.5 301.142,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="273.307" y="-250.3">output:</text>
+<polyline fill="none" points="301.142,-243.5 301.142,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="342.966" y="-272.3">(None, 1, 8)</text>
+<polyline fill="none" points="301.142,-265.5 384.79,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="342.966" y="-250.3">(None, 8)</text>
+</g>
+<!-- 112303689176&#45;&gt;112303689288 -->
+<g class="edge" id="edge3"><title>112303689176-&gt;112303689288</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M206.221,-324.329C211.766,-315.74 218.27,-305.664 224.283,-296.351" fill="none" stroke="black"/>
+<polygon fill="black" points="227.366,-298.029 229.849,-287.729 221.485,-294.232 227.366,-298.029" stroke="black"/>
+</g>
+<!-- 112303686432 -->
+<g class="node" id="node6"><title>112303686432</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="428.376,-243.5 428.376,-287.5 700.731,-287.5 700.731,-243.5 428.376,-243.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="494.895" y="-261.3">FlattenUsers: Flatten</text>
+<polyline fill="none" points="561.414,-243.5 561.414,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="589.249" y="-272.3">input:</text>
+<polyline fill="none" points="561.414,-265.5 617.083,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="589.249" y="-250.3">output:</text>
+<polyline fill="none" points="617.083,-243.5 617.083,-287.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="658.907" y="-272.3">(None, 1, 3)</text>
+<polyline fill="none" points="617.083,-265.5 700.731,-265.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="658.907" y="-250.3">(None, 3)</text>
+</g>
+<!-- 112305946864&#45;&gt;112303686432 -->
+<g class="edge" id="edge4"><title>112305946864-&gt;112303686432</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M583.586,-324.329C580.876,-316.094 577.716,-306.493 574.759,-297.507" fill="none" stroke="black"/>
+<polygon fill="black" points="577.991,-296.134 571.54,-287.729 571.342,-298.322 577.991,-296.134" stroke="black"/>
+</g>
+<!-- 112303688224 -->
+<g class="node" id="node7"><title>112303688224</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="256.24,-162.5 256.24,-206.5 550.867,-206.5 550.867,-162.5 256.24,-162.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="305.909" y="-180.3">Concat: Merge</text>
+<polyline fill="none" points="355.577,-162.5 355.577,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="383.412" y="-191.3">input:</text>
+<polyline fill="none" points="355.577,-184.5 411.246,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="383.412" y="-169.3">output:</text>
+<polyline fill="none" points="411.246,-162.5 411.246,-206.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="481.057" y="-191.3">[(None, 8), (None, 3)]</text>
+<polyline fill="none" points="411.246,-184.5 550.867,-184.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="480.814" y="-169.3">(None, 11)</text>
+</g>
+<!-- 112303689288&#45;&gt;112303688224 -->
+<g class="edge" id="edge5"><title>112303689288-&gt;112303688224</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M286.431,-243.329C306.509,-233.416 330.595,-221.523 351.69,-211.108" fill="none" stroke="black"/>
+<polygon fill="black" points="353.419,-214.158 360.836,-206.592 350.32,-207.881 353.419,-214.158" stroke="black"/>
+</g>
+<!-- 112303686432&#45;&gt;112303688224 -->
+<g class="edge" id="edge6"><title>112303686432-&gt;112303688224</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M521.409,-243.329C501.205,-233.416 476.969,-221.523 455.742,-211.108" fill="none" stroke="black"/>
+<polygon fill="black" points="457.058,-207.855 446.538,-206.592 453.974,-214.139 457.058,-207.855" stroke="black"/>
+</g>
+<!-- 112303688168 -->
+<g class="node" id="node8"><title>112303688168</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="259.99,-81.5 259.99,-125.5 547.118,-125.5 547.118,-81.5 259.99,-81.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="333.895" y="-99.3">FullyConnected: Dense</text>
+<polyline fill="none" points="407.8,-81.5 407.8,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="435.635" y="-110.3">input:</text>
+<polyline fill="none" points="407.8,-103.5 463.469,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="435.635" y="-88.3">output:</text>
+<polyline fill="none" points="463.469,-81.5 463.469,-125.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="505.037" y="-110.3">(None, 11)</text>
+<polyline fill="none" points="463.469,-103.5 547.118,-103.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="505.293" y="-88.3">(None, 100)</text>
+</g>
+<!-- 112303688224&#45;&gt;112303688168 -->
+<g class="edge" id="edge7"><title>112303688224-&gt;112303688168</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M403.554,-162.329C403.554,-154.183 403.554,-144.699 403.554,-135.797" fill="none" stroke="black"/>
+<polygon fill="black" points="407.054,-135.729 403.554,-125.729 400.054,-135.729 407.054,-135.729" stroke="black"/>
+</g>
+<!-- 112303977248 -->
+<g class="node" id="node9"><title>112303977248</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<polygon fill="none" points="275.159,-0.5 275.159,-44.5 531.949,-44.5 531.949,-0.5 275.159,-0.5" stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="333.895" y="-18.3">Activation: Dense</text>
+<polyline fill="none" points="392.631,-0.5 392.631,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="420.466" y="-29.3">input:</text>
+<polyline fill="none" points="392.631,-22.5 448.3,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="420.466" y="-7.3">output:</text>
+<polyline fill="none" points="448.3,-0.5 448.3,-44.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="490.125" y="-29.3">(None, 100)</text>
+<polyline fill="none" points="448.3,-22.5 531.949,-22.5 " stroke="black"/>
+<text font-family="Times,serif" font-size="14.00" text-anchor="middle" x="490.125" y="-7.3">(None, 1)</text>
+</g>
+<!-- 112303688168&#45;&gt;112303977248 -->
+<g class="edge" id="edge8"><title>112303688168-&gt;112303977248</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+<path d="M403.554,-81.3294C403.554,-73.1826 403.554,-63.6991 403.554,-54.7971" fill="none" stroke="black"/>
+<polygon fill="black" points="407.054,-54.729 403.554,-44.729 400.054,-54.729 407.054,-54.729" stroke="black"/>
+</g>
+</g>
+</svg>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[216]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_2</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">train</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">train</span><span class="o">.</span><span class="n">item_id</span><span class="p">],</span> <span class="n">train</span><span class="o">.</span><span class="n">rating</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Epoch 1/20
+80000/80000 [==============================] - 3s 39us/step - loss: 1.2322
+Epoch 2/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.9305
+Epoch 3/20
+80000/80000 [==============================] - 3s 35us/step - loss: 0.9177
+Epoch 4/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.9106
+Epoch 5/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.9059
+Epoch 6/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.9001
+Epoch 7/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.8958
+Epoch 8/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.8937
+Epoch 9/20
+80000/80000 [==============================] - 3s 34us/step - loss: 0.8909
+Epoch 10/20
+80000/80000 [==============================] - 3s 34us/step - loss: 0.8882
+Epoch 11/20
+80000/80000 [==============================] - 3s 34us/step - loss: 0.8862
+Epoch 12/20
+80000/80000 [==============================] - 3s 36us/step - loss: 0.8844
+Epoch 13/20
+80000/80000 [==============================] - 3s 37us/step - loss: 0.8833
+Epoch 14/20
+80000/80000 [==============================] - 4s 52us/step - loss: 0.8815
+Epoch 15/20
+80000/80000 [==============================] - 3s 35us/step - loss: 0.8807
+Epoch 16/20
+80000/80000 [==============================] - 3s 36us/step - loss: 0.8796
+Epoch 17/20
+80000/80000 [==============================] - 3s 33us/step - loss: 0.8771
+Epoch 18/20
+80000/80000 [==============================] - 3s 41us/step - loss: 0.8760
+Epoch 19/20
+80000/80000 [==============================] - 3s 36us/step - loss: 0.8754
+Epoch 20/20
+80000/80000 [==============================] - 3s 42us/step - loss: 0.8737
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[216]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;keras.callbacks.History at 0x1a25dc8ba8&gt;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[217]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_hat_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model_2</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">test</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">item_id</span><span class="p">]),</span><span class="mi">0</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">mean_absolute_error</span>
+<span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_hat_2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[217]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.72124999999999995</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this post, I will write about using non-negative least squares (NNLS) for the problem of non-negative matrix factorisation (NNMF). We often encounter such matrices in the problem of collaborative filtering.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Problem">Problem<a class="anchor-link" href="#Problem">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>I'll now present a simple code example to illustrate the procedure.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Defining-matrix-A">Defining matrix A<a class="anchor-link" href="#Defining-matrix-A">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+
+<span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">10</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">A_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">)))</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">A_orig</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[2]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.548814</td>
+      <td>0.715189</td>
+      <td>0.602763</td>
+      <td>0.544883</td>
+      <td>0.423655</td>
+      <td>0.645894</td>
+      <td>0.437587</td>
+      <td>0.891773</td>
+      <td>0.963663</td>
+      <td>0.383442</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.791725</td>
+      <td>0.528895</td>
+      <td>0.568045</td>
+      <td>0.925597</td>
+      <td>0.071036</td>
+      <td>0.087129</td>
+      <td>0.020218</td>
+      <td>0.832620</td>
+      <td>0.778157</td>
+      <td>0.870012</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.978618</td>
+      <td>0.799159</td>
+      <td>0.461479</td>
+      <td>0.780529</td>
+      <td>0.118274</td>
+      <td>0.639921</td>
+      <td>0.143353</td>
+      <td>0.944669</td>
+      <td>0.521848</td>
+      <td>0.414662</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.264556</td>
+      <td>0.774234</td>
+      <td>0.456150</td>
+      <td>0.568434</td>
+      <td>0.018790</td>
+      <td>0.617635</td>
+      <td>0.612096</td>
+      <td>0.616934</td>
+      <td>0.943748</td>
+      <td>0.681820</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.359508</td>
+      <td>0.437032</td>
+      <td>0.697631</td>
+      <td>0.060225</td>
+      <td>0.666767</td>
+      <td>0.670638</td>
+      <td>0.210383</td>
+      <td>0.128926</td>
+      <td>0.315428</td>
+      <td>0.363711</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Masking-a-few-entries">Masking a few entries<a class="anchor-link" href="#Masking-a-few-entries">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">A_orig</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+<span class="n">A</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+<span class="n">A</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">A_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">A_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[4]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaN</td>
+      <td>0.715189</td>
+      <td>0.602763</td>
+      <td>0.544883</td>
+      <td>0.423655</td>
+      <td>0.645894</td>
+      <td>0.437587</td>
+      <td>0.891773</td>
+      <td>0.963663</td>
+      <td>0.383442</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.791725</td>
+      <td>0.528895</td>
+      <td>0.568045</td>
+      <td>0.925597</td>
+      <td>0.071036</td>
+      <td>0.087129</td>
+      <td>0.020218</td>
+      <td>0.832620</td>
+      <td>0.778157</td>
+      <td>0.870012</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.978618</td>
+      <td>0.799159</td>
+      <td>0.461479</td>
+      <td>0.780529</td>
+      <td>0.118274</td>
+      <td>0.639921</td>
+      <td>0.143353</td>
+      <td>0.944669</td>
+      <td>0.521848</td>
+      <td>0.414662</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.264556</td>
+      <td>NaN</td>
+      <td>0.456150</td>
+      <td>0.568434</td>
+      <td>0.018790</td>
+      <td>0.617635</td>
+      <td>0.612096</td>
+      <td>0.616934</td>
+      <td>0.943748</td>
+      <td>0.681820</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.359508</td>
+      <td>0.437032</td>
+      <td>0.697631</td>
+      <td>0.060225</td>
+      <td>0.666767</td>
+      <td>0.670638</td>
+      <td>0.210383</td>
+      <td>0.128926</td>
+      <td>0.315428</td>
+      <td>0.363711</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Defining-matrices-W-and-H">Defining matrices W and H<a class="anchor-link" href="#Defining-matrices-W-and-H">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">K</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">)))</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">K</span><span class="o">*</span><span class="n">W</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">K</span><span class="o">*</span><span class="n">H</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[6]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.078709</td>
+      <td>0.175784</td>
+      <td>0.095359</td>
+      <td>0.045339</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.006230</td>
+      <td>0.016976</td>
+      <td>0.171505</td>
+      <td>0.114531</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.135453</td>
+      <td>0.226355</td>
+      <td>0.250000</td>
+      <td>0.054753</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.167387</td>
+      <td>0.066473</td>
+      <td>0.005213</td>
+      <td>0.191444</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.080785</td>
+      <td>0.096801</td>
+      <td>0.148514</td>
+      <td>0.209789</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">H</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[7]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.074611</td>
+      <td>0.216164</td>
+      <td>0.157328</td>
+      <td>0.003370</td>
+      <td>0.088415</td>
+      <td>0.037721</td>
+      <td>0.250000</td>
+      <td>0.121806</td>
+      <td>0.126649</td>
+      <td>0.162827</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.093851</td>
+      <td>0.034858</td>
+      <td>0.209333</td>
+      <td>0.048340</td>
+      <td>0.130195</td>
+      <td>0.057117</td>
+      <td>0.024914</td>
+      <td>0.219537</td>
+      <td>0.247731</td>
+      <td>0.244654</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.230833</td>
+      <td>0.197093</td>
+      <td>0.084828</td>
+      <td>0.020651</td>
+      <td>0.103694</td>
+      <td>0.059133</td>
+      <td>0.033735</td>
+      <td>0.013604</td>
+      <td>0.184756</td>
+      <td>0.002910</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.196210</td>
+      <td>0.037417</td>
+      <td>0.020248</td>
+      <td>0.022815</td>
+      <td>0.171121</td>
+      <td>0.062477</td>
+      <td>0.107081</td>
+      <td>0.141921</td>
+      <td>0.219119</td>
+      <td>0.185125</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Embedding</span><span class="p">,</span> <span class="n">Input</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+
+<span class="n">input_layer</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">embedding_users_layer</span> <span class="o">=</span> <span class="n">Embedding</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">embedding_users</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-12-5c1c88df9ba5&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">      1</span> model <span class="ansi-blue-fg">=</span> Sequential<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>model<span class="ansi-blue-fg">.</span>add<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-red-fg">TypeError</span>: add() missing 1 required positional argument: &#39;layer&#39;</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Defining-the-cost-that-we-want-to-minimise">Defining the cost that we want to minimise<a class="anchor-link" href="#Defining-the-cost-that-we-want-to-minimise">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">linalg</span>
+    <span class="n">WH</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">A_WH</span> <span class="o">=</span> <span class="n">A</span><span class="o">-</span><span class="n">WH</span>
+    <span class="k">return</span> <span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A_WH</span><span class="p">,</span> <span class="s1">&#39;fro&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>However, since A has missing entries, we have to define the cost in terms of the entries present in A</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">linalg</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">WH</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">WH_mask</span> <span class="o">=</span> <span class="n">WH</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">A_mask</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">A_WH_mask</span> <span class="o">=</span> <span class="n">A_mask</span><span class="o">-</span><span class="n">WH_mask</span>
+    <span class="c1"># Since now A_WH_mask is a vector, we use L2 instead of Frobenius norm for matrix</span>
+    <span class="k">return</span> <span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A_WH_mask</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let us just try to see the cost of the initial set of values of W and H we randomly assigned.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cost</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[9]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>7.3719938519859509</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Alternating-NNLS-procedure">Alternating NNLS procedure<a class="anchor-link" href="#Alternating-NNLS-procedure">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">num_iter</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">num_display_cost</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_iter</span><span class="o">/</span><span class="mi">10</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">nnls</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_iter</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="k">2</span> ==0:
+        <span class="c1"># Learn H, given A and W</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">mask_rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">A</span><span class="p">[:,</span><span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span>
+            <span class="n">H</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">nnls</span><span class="p">(</span><span class="n">W</span><span class="p">[</span><span class="n">mask_rows</span><span class="p">],</span> <span class="n">A</span><span class="p">[:,</span><span class="n">j</span><span class="p">][</span><span class="n">mask_rows</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+            <span class="n">mask_rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">,:])</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span>
+            <span class="n">W</span><span class="p">[</span><span class="n">j</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">nnls</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">transpose</span><span class="p">()[</span><span class="n">mask_rows</span><span class="p">],</span> <span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">,:][</span><span class="n">mask_rows</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">WH</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="k">num_display_cost</span>==0:
+        <span class="nb">print</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span>
+        
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0 4.03939072472
+100 2.38059096458
+200 2.35814781954
+300 2.35717011529
+400 2.35711130357
+500 2.3571079918
+600 2.35710729854
+700 2.35710713129
+800 2.35710709085
+900 2.35710708109
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">A_pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">))</span>
+<span class="n">A_pred</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[11]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.564235</td>
+      <td>0.677712</td>
+      <td>0.558999</td>
+      <td>0.631337</td>
+      <td>0.536069</td>
+      <td>0.621925</td>
+      <td>0.629133</td>
+      <td>0.656010</td>
+      <td>0.839802</td>
+      <td>0.545072</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.788734</td>
+      <td>0.539729</td>
+      <td>0.517534</td>
+      <td>1.041272</td>
+      <td>0.119894</td>
+      <td>0.448402</td>
+      <td>0.172808</td>
+      <td>0.658696</td>
+      <td>0.493093</td>
+      <td>0.825311</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.749886</td>
+      <td>0.575154</td>
+      <td>0.558981</td>
+      <td>0.931156</td>
+      <td>0.270149</td>
+      <td>0.502035</td>
+      <td>0.287008</td>
+      <td>0.656178</td>
+      <td>0.588916</td>
+      <td>0.741519</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.377419</td>
+      <td>0.743081</td>
+      <td>0.370408</td>
+      <td>0.637094</td>
+      <td>0.071684</td>
+      <td>0.529433</td>
+      <td>0.767696</td>
+      <td>0.628507</td>
+      <td>0.832910</td>
+      <td>0.605742</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.458661</td>
+      <td>0.327143</td>
+      <td>0.610012</td>
+      <td>0.233134</td>
+      <td>0.685559</td>
+      <td>0.377750</td>
+      <td>0.281483</td>
+      <td>0.269960</td>
+      <td>0.468756</td>
+      <td>0.114950</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's view the values of the masked entries.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">A_pred</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">~</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[12]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([ 0.56423481,  0.74308143,  0.10283106])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Original values were:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">A_orig</span><span class="p">[</span><span class="o">~</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[13]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([ 0.5488135 ,  0.77423369,  0.13818295])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>There you go, we are able to get recover A using a lower ranked decomposition consisting of non-negative terms only.</p>
+
+</div>
+</div>
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

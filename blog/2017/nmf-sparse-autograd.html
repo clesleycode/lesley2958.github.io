@@ -1,0 +1,1321 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Non-negative matrix factorization with sparsity constraints using Autograd</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Non-negative-matrix-factorization-with-sparsity-constraints-using-Autograd">Non-negative matrix factorization with sparsity constraints using Autograd<a class="anchor-link" href="#Non-negative-matrix-factorization-with-sparsity-constraints-using-Autograd">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In a <a href="./nnmf-tensorflow.html">previous post</a>, we had seen how to perfom non-negative matrix factorization (NNMF) using Tensorflow. In this post, we will look at performing NNMF using <a href="https://github.com/HIPS/autograd">Autograd</a>. Like Tensorflow, Autograd allows automatic gradient calculation.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Customary-imports">Customary imports<a class="anchor-link" href="#Customary-imports">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Creating-the-matrix-to-be-decomposed">Creating the matrix to be decomposed<a class="anchor-link" href="#Creating-the-matrix-to-be-decomposed">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Masking-one-entry">Masking one entry<a class="anchor-link" href="#Masking-one-entry">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">A</span><span class="o">!=</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[24]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>12</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[25]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>45.0</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[26]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[27]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(4, 3)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">A</span><span class="o">!=</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[28]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>nan</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Defining-the-cost-function">Defining the cost function<a class="anchor-link" href="#Defining-the-cost-function">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[29]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ 1.76405235,  0.40015721,  0.97873798],
+       [ 2.2408932 ,  1.86755799,  0.97727788],
+       [ 0.95008842,  0.15135721,  0.10321885],
+       [ 0.4105985 ,  0.14404357,  1.45427351],
+       [ 0.76103773,  0.12167502,  0.44386323],
+       [ 0.33367433,  1.49407907,  0.20515826],
+       [ 0.3130677 ,  0.85409574,  2.55298982],
+       [ 0.6536186 ,  0.8644362 ,  0.74216502],
+       [ 2.26975462,  1.45436567,  0.04575852],
+       [ 0.18718385,  1.53277921,  1.46935877]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[171]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;2,1&quot;</span><span class="p">):</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">norm</span><span class="o">==</span><span class="s2">&quot;2,1&quot;</span><span class="p">:</span>
+        <span class="c1"># First L2 over rows and then L1 over result</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">H</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="n">norm</span><span class="o">==</span><span class="s2">&quot;0&quot;</span><span class="p">:</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="n">H</span><span class="o">!=</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">pred</span> <span class="o">-</span> <span class="n">A</span><span class="p">)[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">))</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">penalty</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Decomposition-params">Decomposition params<a class="anchor-link" href="#Decomposition-params">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[172]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">rank</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span>
+<span class="n">n_steps</span> <span class="o">=</span> <span class="mi">10000</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Gradient-of-cost-wrt-params-W-and-H">Gradient of cost wrt params W and H<a class="anchor-link" href="#Gradient-of-cost-wrt-params-W-and-H">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[173]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">from</span> <span class="nn">autograd</span> <span class="kn">import</span> <span class="n">grad</span><span class="p">,</span> <span class="n">multigrad</span>
+<span class="n">grad_cost</span><span class="o">=</span> <span class="n">multigrad</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">argnums</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Main-gradient-descent-routine">Main gradient descent routine<a class="anchor-link" href="#Main-gradient-descent-routine">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[178]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">shape</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">H</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="n">W</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rank</span><span class="p">))</span>
+<span class="k">print</span> <span class="s2">&quot;Iteration, Cost&quot;</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_steps</span><span class="p">):</span>
+    
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="k">100</span>==0:
+        <span class="k">print</span> <span class="s2">&quot;*&quot;</span><span class="o">*</span><span class="mi">20</span>
+        <span class="k">print</span> <span class="n">i</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">cost</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span> <span class="o">-</span> <span class="n">A</span><span class="p">)[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">H</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+    <span class="n">del_W</span><span class="p">,</span> <span class="n">del_H</span> <span class="o">=</span> <span class="n">grad_cost</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">W</span> <span class="o">=</span>  <span class="n">W</span><span class="o">-</span><span class="n">del_W</span><span class="o">*</span><span class="n">learning_rate</span>
+    <span class="n">H</span> <span class="o">=</span>  <span class="n">H</span><span class="o">-</span><span class="n">del_H</span><span class="o">*</span><span class="n">learning_rate</span>
+    
+    <span class="c1"># Ensuring that W, H remain non-negative. This is also called projected gradient descent</span>
+    <span class="n">W</span><span class="p">[</span><span class="n">W</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">H</span><span class="p">[</span><span class="n">H</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Iteration, Cost
+********************
+0 , 7.8074674545
+4.11660945144 3.69085800306
+********************
+100 , 3.77696419877
+0.831569470895 2.94539472787
+********************
+200 , 2.9374193837
+0.309072202323 2.62834718138
+********************
+300 , 2.47142401099
+0.060994596725 2.41042941427
+********************
+400 , 2.20564132862
+0.00404946380567 2.20159186482
+********************
+500 , 2.01255024411
+0.00418481657025 2.00836542754
+********************
+600 , 1.8598780115
+0.0188892164873 1.84098879501
+********************
+700 , 1.7179434289
+0.0144148799476 1.70352854895
+********************
+800 , 1.60671559017
+0.0159317133041 1.59078387687
+********************
+900 , 1.5177987394
+0.0168379626974 1.5009607767
+********************
+1000 , 1.44735576901
+0.017713885629 1.42964188338
+********************
+1100 , 1.39085910342
+0.0185650531293 1.37229405029
+********************
+1200 , 1.34472119362
+0.0194076215818 1.32531357204
+********************
+1300 , 1.30616339893
+0.0202463274503 1.28591707148
+********************
+1400 , 1.27316526814
+0.0210814840763 1.25208378406
+********************
+1500 , 1.24430883662
+0.0219119620944 1.22239687452
+********************
+1600 , 1.21861350066
+0.0227364392625 1.19587706139
+********************
+1700 , 1.19540059681
+0.0235538288363 1.17184676798
+********************
+1800 , 1.17419448571
+0.0243633662217 1.14983111948
+********************
+1900 , 1.1546545971
+0.0251645743344 1.12949002276
+********************
+2000 , 1.13653030737
+0.0259571986017 1.11057310877
+********************
+2100 , 1.11963151338
+0.0267411448662 1.09289036852
+********************
+2200 , 1.10380958029
+0.0275164296971 1.07629315059
+********************
+2300 , 1.08894499059
+0.0282831436794 1.06066184691
+********************
+2400 , 1.07493926782
+0.0290414254371 1.04589784238
+********************
+2500 , 1.06170961316
+0.029791443713 1.03191816945
+********************
+2600 , 1.04918526627
+0.0305333851881 1.01865188108
+********************
+2700 , 1.03730496991
+0.0312674462737 1.00603752364
+********************
+2800 , 1.02601515082
+0.0319938276034 0.994021323216
+********************
+2900 , 1.01526857429
+0.032712730347 0.982555843948
+********************
+3000 , 1.00502331967
+0.0334243537486 0.97159896592
+********************
+3100 , 0.995241979373
+0.0341288934929 0.96111308588
+********************
+3200 , 0.985891018464
+0.0348265406341 0.95106447783
+********************
+3300 , 0.976940252737
+0.0355174809111 0.941422771826
+********************
+3400 , 0.968362416957
+0.0362018943323 0.932160522625
+********************
+3500 , 0.960132803248
+0.036879954948 0.9232528483
+********************
+3600 , 0.952228955228
+0.0375518307586 0.914677124469
+********************
+3700 , 0.944630407221
+0.0382176837164 0.906412723504
+********************
+3800 , 0.937318460411
+0.0388776697973 0.898440790614
+********************
+3900 , 0.930275989615
+0.0395319391193 0.890744050495
+********************
+4000 , 0.923487275666
+0.040180636096 0.88330663957
+********************
+4100 , 0.916937859381
+0.0408238996123 0.876113959769
+********************
+4200 , 0.910614413835
+0.0414618632148 0.86915255062
+********************
+4300 , 0.904504632238
+0.0420946553116 0.862409976927
+********************
+4400 , 0.898597129194
+0.0427223993751 0.855874729819
+********************
+4500 , 0.892881353459
+0.0433452141467 0.849536139312
+********************
+4600 , 0.88734751065
+0.0439632138381 0.843384296812
+********************
+4700 , 0.881986494572
+0.0445765083299 0.837409986243
+********************
+4800 , 0.876789826038
+0.0451852033647 0.831604622674
+********************
+4900 , 0.871749598242
+0.0457894007338 0.825960197508
+********************
+5000 , 0.866858427854
+0.0463891984576 0.820469229397
+********************
+5100 , 0.862109411151
+0.0469846909581 0.815124720193
+********************
+5200 , 0.857496084568
+0.0475759692251 0.809920115343
+********************
+5300 , 0.853012389156
+0.0481631209742 0.804849268182
+********************
+5400 , 0.848652638499
+0.0487462307973 0.799906407701
+********************
+5500 , 0.84441148969
+0.0493253803071 0.795086109383
+********************
+5600 , 0.840283917038
+0.0499006482728 0.790383268765
+********************
+5700 , 0.836265188188
+0.0504721107506 0.785793077438
+********************
+5800 , 0.832350842418
+0.0510398412065 0.781311001212
+********************
+5900 , 0.828536670865
+0.0516039106335 0.776932760232
+********************
+6000 , 0.824818698487
+0.0521643876623 0.772654310825
+********************
+6100 , 0.821193167582
+0.0527213386667 0.768471828915
+********************
+6200 , 0.817656522712
+0.0532748278634 0.764381694848
+********************
+6300 , 0.814205396879
+0.0538249174064 0.760380479472
+********************
+6400 , 0.810836598851
+0.0543716674769 0.756464931374
+********************
+6500 , 0.807547101508
+0.0549151363682 0.75263196514
+********************
+6600 , 0.804334031127
+0.0554553805664 0.748878650561
+********************
+6700 , 0.801194657505
+0.0559924548272 0.745202202678
+********************
+6800 , 0.798126384853
+0.0565264122482 0.741599972605
+********************
+6900 , 0.795126743391
+0.057057304338 0.738069439053
+********************
+7000 , 0.792193381567
+0.0575851810816 0.734608200486
+********************
+7100 , 0.789324058871
+0.0581100910024 0.731213967869
+********************
+7200 , 0.786516639162
+0.0586320812216 0.72788455794
+********************
+7300 , 0.783769084488
+0.059151197514 0.724617886974
+********************
+7400 , 0.78107944935
+0.0596674843614 0.721411964989
+********************
+7500 , 0.778445875362
+0.0601809850036 0.718264890358
+********************
+7600 , 0.77586658629
+0.0606917414861 0.715174844804
+********************
+7700 , 0.773339883435
+0.0611997947065 0.712140088729
+********************
+7800 , 0.770864141323
+0.0617051844584 0.709158956864
+********************
+7900 , 0.768437803687
+0.0622079494725 0.706229854214
+********************
+8000 , 0.766059379721
+0.0627081274565 0.703351252264
+********************
+8100 , 0.76372744057
+0.0632057551333 0.700521685437
+********************
+8200 , 0.761440616057
+0.0637008682766 0.697739747781
+********************
+8300 , 0.759197591612
+0.0641935017459 0.695004089866
+********************
+8400 , 0.756997105398
+0.0646836895186 0.692313415879
+********************
+8500 , 0.754837945619
+0.065171464722 0.689666480897
+********************
+8600 , 0.752718947991
+0.0656568596632 0.687062088328
+********************
+8700 , 0.75063899337
+0.0661399058576 0.684499087513
+********************
+8800 , 0.748597005523
+0.066620634056 0.681976371467
+********************
+8900 , 0.746591949029
+0.0670990742716 0.679492874757
+********************
+9000 , 0.744622827311
+0.0675752558042 0.677047571507
+********************
+9100 , 0.742688680777
+0.0680492072645 0.674639473512
+********************
+9200 , 0.74078858507
+0.0685209565974 0.672267628473
+********************
+9300 , 0.738921649423
+0.0689905311034 0.669931118319
+********************
+9400 , 0.737087015098
+0.06945795746 0.667629057638
+********************
+9500 , 0.735283853922
+0.0699232617418 0.66536059218
+********************
+9600 , 0.733511366899
+0.0703864694401 0.663124897459
+********************
+9700 , 0.731768782901
+0.0708476054808 0.66092117742
+********************
+9800 , 0.730055357425
+0.0713066942432 0.658748663182
+********************
+9900 , 0.728370371427
+0.0717637595762 0.65660661185
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[111]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span><span class="p">[</span><span class="n">H</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[179]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[179]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.848175</td>
+      <td>1.642954</td>
+      <td>2.283753</td>
+      <td>4.442932</td>
+      <td>0.844876</td>
+      <td>0.750217</td>
+      <td>3.248048</td>
+      <td>2.581215</td>
+      <td>1.443529</td>
+      <td>1.266878</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.580067</td>
+      <td>1.950030</td>
+      <td>2.858395</td>
+      <td>4.329612</td>
+      <td>0.849971</td>
+      <td>0.620860</td>
+      <td>2.977379</td>
+      <td>1.801214</td>
+      <td>1.923315</td>
+      <td>0.986069</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>4.598746</td>
+      <td>2.939838</td>
+      <td>1.724074</td>
+      <td>3.188869</td>
+      <td>1.022232</td>
+      <td>0.441897</td>
+      <td>0.621784</td>
+      <td>1.059382</td>
+      <td>2.950799</td>
+      <td>1.136291</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.000000</td>
+      <td>0.131597</td>
+      <td>1.446627</td>
+      <td>2.732701</td>
+      <td>0.000000</td>
+      <td>2.043358</td>
+      <td>2.582847</td>
+      <td>0.967172</td>
+      <td>2.110048</td>
+      <td>0.347477</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[180]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[180]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.397170</td>
+      <td>0.049224</td>
+      <td>0.111182</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.264946</td>
+      <td>0.073690</td>
+      <td>0.185207</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.167738</td>
+      <td>0.195871</td>
+      <td>0.251816</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.297669</td>
+      <td>0.354562</td>
+      <td>0.428839</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.094635</td>
+      <td>0.029068</td>
+      <td>0.091157</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.030001</td>
+      <td>0.178831</td>
+      <td>0.035849</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0.071021</td>
+      <td>0.296880</td>
+      <td>0.300762</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0.103100</td>
+      <td>0.145153</td>
+      <td>0.228574</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0.251819</td>
+      <td>0.221511</td>
+      <td>0.132180</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0.103313</td>
+      <td>0.064615</td>
+      <td>0.116890</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[181]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+<span class="n">pred_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">()</span>
+<span class="n">pred_df</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[181]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[182]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[182]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaN</td>
+      <td>4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[74]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[74]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>15</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[76]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span><span class="o">.</span><span class="n">size</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[76]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>15</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[75]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">H</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[75]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ 0.67465207,  0.30721673,  0.47904857],
+       [ 0.18433676,  0.50632065,  0.63834613],
+       [ 0.04810152,  0.28539869,  0.25933821],
+       [ 0.46973566,  0.45846022,  0.44300948],
+       [ 0.48211291,  0.4235707 ,  0.57590783]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

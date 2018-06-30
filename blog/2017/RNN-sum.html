@@ -1,0 +1,869 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Nipun Batra</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&#39;&#39;&#39;An implementation of sequence to sequence learning for performing addition</span>
+
+<span class="sd">Input: &quot;535+61&quot;</span>
+<span class="sd">Output: &quot;596&quot;</span>
+<span class="sd">Padding is handled by using a repeated sentinel character (space)</span>
+
+<span class="sd">Input may optionally be inverted, shown to increase performance in many tasks in:</span>
+<span class="sd">&quot;Learning to Execute&quot;</span>
+<span class="sd">http://arxiv.org/abs/1410.4615</span>
+<span class="sd">and</span>
+<span class="sd">&quot;Sequence to Sequence Learning with Neural Networks&quot;</span>
+<span class="sd">http://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf</span>
+<span class="sd">Theoretically it introduces shorter term dependencies between source and target.</span>
+
+<span class="sd">Two digits inverted:</span>
+<span class="sd">+ One layer LSTM (128 HN), 5k training examples = 99% train/test accuracy in 55 epochs</span>
+
+<span class="sd">Three digits inverted:</span>
+<span class="sd">+ One layer LSTM (128 HN), 50k training examples = 99% train/test accuracy in 100 epochs</span>
+
+<span class="sd">Four digits inverted:</span>
+<span class="sd">+ One layer LSTM (128 HN), 400k training examples = 99% train/test accuracy in 20 epochs</span>
+
+<span class="sd">Five digits inverted:</span>
+<span class="sd">+ One layer LSTM (128 HN), 550k training examples = 99% train/test accuracy in 30 epochs</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">layers</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">range</span>
+
+
+<span class="k">class</span> <span class="nc">CharacterTable</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a set of characters:</span>
+<span class="sd">    + Encode them to a one hot integer representation</span>
+<span class="sd">    + Decode the one hot integer representation to their character output</span>
+<span class="sd">    + Decode a vector of probabilities to their character output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chars</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize character table.</span>
+
+<span class="sd">        # Arguments</span>
+<span class="sd">            chars: Characters that can appear in the input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chars</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">chars</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">char_indices</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indices_char</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;One hot encode given string C.</span>
+
+<span class="sd">        # Arguments</span>
+<span class="sd">            num_rows: Number of rows in the returned one hot encoding. This is</span>
+<span class="sd">                used to keep the # of rows for each data the same.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_rows</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_indices</span><span class="p">[</span><span class="n">c</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">calc_argmax</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">calc_argmax</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices_char</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">colors</span><span class="p">:</span>
+    <span class="n">ok</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[92m&#39;</span>
+    <span class="n">fail</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[91m&#39;</span>
+    <span class="n">close</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[0m&#39;</span>
+
+<span class="c1"># Parameters for the model and dataset.</span>
+<span class="n">TRAINING_SIZE</span> <span class="o">=</span> <span class="mi">50000</span>
+<span class="n">DIGITS</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">INVERT</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># Maximum length of input is &#39;int + int&#39; (e.g., &#39;345+678&#39;). Maximum length of</span>
+<span class="c1"># int is DIGITS.</span>
+<span class="n">MAXLEN</span> <span class="o">=</span> <span class="n">DIGITS</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">DIGITS</span>
+
+<span class="c1"># All the numbers, plus sign and space for padding.</span>
+<span class="n">chars</span> <span class="o">=</span> <span class="s1">&#39;0123456789+ &#39;</span>
+<span class="n">ctable</span> <span class="o">=</span> <span class="n">CharacterTable</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span>
+
+<span class="n">questions</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">expected</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating data...&#39;</span><span class="p">)</span>
+<span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">questions</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TRAINING_SIZE</span><span class="p">:</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="s1">&#39;0123456789&#39;</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">DIGITS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))))</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">f</span><span class="p">(),</span> <span class="n">f</span><span class="p">()</span>
+    <span class="c1"># Skip any addition questions we&#39;ve already seen</span>
+    <span class="c1"># Also skip any such that x+Y == Y+x (hence the sorting).</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="c1"># Pad the data with spaces such that it is always MAXLEN.</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">+</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">MAXLEN</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
+    <span class="c1"># Answers can be of maximum size DIGITS + 1.</span>
+    <span class="n">ans</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">DIGITS</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ans</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">INVERT</span><span class="p">:</span>
+        <span class="c1"># Reverse the query, e.g., &#39;12+345  &#39; becomes &#39;  543+21&#39;. (Note the</span>
+        <span class="c1"># space used for padding.)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">questions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">expected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total addition questions:&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">questions</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Vectorization...&#39;</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">questions</span><span class="p">),</span> <span class="n">MAXLEN</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chars</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">questions</span><span class="p">),</span> <span class="n">DIGITS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chars</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">questions</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctable</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">sentence</span><span class="p">,</span> <span class="n">MAXLEN</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">expected</span><span class="p">):</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctable</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">sentence</span><span class="p">,</span> <span class="n">DIGITS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Shuffle (x, y) in unison as the later parts of x will almost all be larger</span>
+<span class="c1"># digits.</span>
+<span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+<span class="c1"># Explicitly set apart 10% for validation data that we never train over.</span>
+<span class="n">split_at</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span>
+<span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">x_val</span><span class="p">)</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="n">split_at</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">split_at</span><span class="p">:]</span>
+<span class="p">(</span><span class="n">y_train</span><span class="p">,</span> <span class="n">y_val</span><span class="p">)</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:</span><span class="n">split_at</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">split_at</span><span class="p">:]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training Data:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Validation Data:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">x_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Generating data...
+Total addition questions: 50000
+Vectorization...
+Training Data:
+(45000, 7, 12)
+(45000, 4, 12)
+Validation Data:
+(5000, 7, 12)
+(5000, 4, 12)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">questions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[10]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;5+97   &#39;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Try replacing GRU, or SimpleRNN.</span>
+<span class="n">RNN</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">LSTM</span>
+<span class="n">HIDDEN_SIZE</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">LAYERS</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Build model...&#39;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="c1"># &quot;Encode&quot; the input sequence using an RNN, producing an output of HIDDEN_SIZE.</span>
+<span class="c1"># Note: In a situation where your input sequences have a variable length,</span>
+<span class="c1"># use input_shape=(None, num_feature).</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">RNN</span><span class="p">(</span><span class="n">HIDDEN_SIZE</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">MAXLEN</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chars</span><span class="p">))))</span>
+<span class="c1"># As the decoder RNN&#39;s input, repeatedly provide with the last hidden state of</span>
+<span class="c1"># RNN for each time step. Repeat &#39;DIGITS + 1&#39; times as that&#39;s the maximum</span>
+<span class="c1"># length of output, e.g., when DIGITS=3, max output is 999+999=1998.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">RepeatVector</span><span class="p">(</span><span class="n">DIGITS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="c1"># The decoder RNN could be multiple layers stacked or a single layer.</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">LAYERS</span><span class="p">):</span>
+    <span class="c1"># By setting return_sequences to True, return not only the last output but</span>
+    <span class="c1"># all the outputs so far in the form of (num_samples, timesteps,</span>
+    <span class="c1"># output_dim). This is necessary as TimeDistributed in the below expects</span>
+    <span class="c1"># the first dimension to be the timesteps.</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">RNN</span><span class="p">(</span><span class="n">HIDDEN_SIZE</span><span class="p">,</span> <span class="n">return_sequences</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+<span class="c1"># Apply a dense layer to the every temporal slice of an input. For each of step</span>
+<span class="c1"># of the output sequence, decide which character should be chosen.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">TimeDistributed</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chars</span><span class="p">))))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;softmax&#39;</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s1">&#39;categorical_crossentropy&#39;</span><span class="p">,</span>
+              <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span>
+              <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="c1"># Train the model each generation and show predictions against the validation</span>
+<span class="c1"># dataset.</span>
+<span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">200</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">,</span> <span class="n">iteration</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span>
+              <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span>
+              <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+              <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">x_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">))</span>
+    <span class="c1"># Select 10 samples from the validation set at random so we can visualize</span>
+    <span class="c1"># errors.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_val</span><span class="p">))</span>
+        <span class="n">rowx</span><span class="p">,</span> <span class="n">rowy</span> <span class="o">=</span> <span class="n">x_val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ind</span><span class="p">])],</span> <span class="n">y_val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ind</span><span class="p">])]</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_classes</span><span class="p">(</span><span class="n">rowx</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">ctable</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">rowx</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">correct</span> <span class="o">=</span> <span class="n">ctable</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">rowy</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">guess</span> <span class="o">=</span> <span class="n">ctable</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">calc_argmax</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span> <span class="n">q</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">INVERT</span> <span class="k">else</span> <span class="n">q</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="n">correct</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">correct</span> <span class="o">==</span> <span class="n">guess</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">colors</span><span class="o">.</span><span class="n">ok</span> <span class="o">+</span> <span class="s1">&#39;☑&#39;</span> <span class="o">+</span> <span class="n">colors</span><span class="o">.</span><span class="n">close</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">colors</span><span class="o">.</span><span class="n">fail</span> <span class="o">+</span> <span class="s1">&#39;☒&#39;</span> <span class="o">+</span> <span class="n">colors</span><span class="o">.</span><span class="n">close</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">guess</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Build model...
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+lstm_1 (LSTM)                (None, 128)               72192     
+_________________________________________________________________
+repeat_vector_1 (RepeatVecto (None, 4, 128)            0         
+_________________________________________________________________
+lstm_2 (LSTM)                (None, 4, 128)            131584    
+_________________________________________________________________
+time_distributed_1 (TimeDist (None, 4, 12)             1548      
+_________________________________________________________________
+activation_1 (Activation)    (None, 4, 12)             0         
+=================================================================
+Total params: 205,324
+Trainable params: 205,324
+Non-trainable params: 0
+_________________________________________________________________
+
+--------------------------------------------------
+Iteration 1
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 298us/step - loss: 1.8859 - acc: 0.3202 - val_loss: 1.7913 - val_acc: 0.3388
+Q 4+703   T 707  <span class="ansi-red-intense-fg">☒</span> 22  
+Q 224+29  T 253  <span class="ansi-red-intense-fg">☒</span> 322 
+Q 1+539   T 540  <span class="ansi-red-intense-fg">☒</span> 22  
+Q 97+913  T 1010 <span class="ansi-red-intense-fg">☒</span> 102 
+Q 137+39  T 176  <span class="ansi-red-intense-fg">☒</span> 122 
+Q 96+817  T 913  <span class="ansi-red-intense-fg">☒</span> 102 
+Q 737+857 T 1594 <span class="ansi-red-intense-fg">☒</span> 122 
+Q 54+396  T 450  <span class="ansi-red-intense-fg">☒</span> 122 
+Q 29+475  T 504  <span class="ansi-red-intense-fg">☒</span> 122 
+Q 49+76   T 125  <span class="ansi-red-intense-fg">☒</span> 102 
+
+--------------------------------------------------
+Iteration 2
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 282us/step - loss: 1.7530 - acc: 0.3519 - val_loss: 1.7041 - val_acc: 0.3706
+Q 812+4   T 816  <span class="ansi-red-intense-fg">☒</span> 11  
+Q 254+20  T 274  <span class="ansi-red-intense-fg">☒</span> 455 
+Q 388+146 T 534  <span class="ansi-red-intense-fg">☒</span> 100 
+Q 978+50  T 1028 <span class="ansi-red-intense-fg">☒</span> 105 
+Q 71+410  T 481  <span class="ansi-red-intense-fg">☒</span> 100 
+Q 30+115  T 145  <span class="ansi-red-intense-fg">☒</span> 225 
+Q 697+765 T 1462 <span class="ansi-red-intense-fg">☒</span> 1555
+Q 610+88  T 698  <span class="ansi-red-intense-fg">☒</span> 800 
+Q 79+798  T 877  <span class="ansi-red-intense-fg">☒</span> 105 
+Q 220+438 T 658  <span class="ansi-red-intense-fg">☒</span> 303 
+
+--------------------------------------------------
+Iteration 3
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 12s 276us/step - loss: 1.6301 - acc: 0.3908 - val_loss: 1.5461 - val_acc: 0.4165.6324 - acc: 
+Q 404+20  T 424  <span class="ansi-red-intense-fg">☒</span> 488 
+Q 84+307  T 391  <span class="ansi-red-intense-fg">☒</span> 488 
+Q 52+13   T 65   <span class="ansi-red-intense-fg">☒</span> 11  
+Q 830+6   T 836  <span class="ansi-red-intense-fg">☒</span> 833 
+Q 857+74  T 931  <span class="ansi-red-intense-fg">☒</span> 842 
+Q 909+2   T 911  <span class="ansi-red-intense-fg">☒</span> 900 
+Q 627+94  T 721  <span class="ansi-red-intense-fg">☒</span> 702 
+Q 194+833 T 1027 <span class="ansi-red-intense-fg">☒</span> 118 
+Q 494+401 T 895  <span class="ansi-red-intense-fg">☒</span> 908 
+Q 28+608  T 636  <span class="ansi-red-intense-fg">☒</span> 388 
+
+--------------------------------------------------
+Iteration 4
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 291us/step - loss: 1.4862 - acc: 0.4425 - val_loss: 1.4027 - val_acc: 0.4718
+Q 23+766  T 789  <span class="ansi-red-intense-fg">☒</span> 781 
+Q 606+72  T 678  <span class="ansi-red-intense-fg">☒</span> 761 
+Q 815+67  T 882  <span class="ansi-red-intense-fg">☒</span> 851 
+Q 3+591   T 594  <span class="ansi-red-intense-fg">☒</span> 544 
+Q 78+37   T 115  <span class="ansi-red-intense-fg">☒</span> 148 
+Q 453+56  T 509  <span class="ansi-red-intense-fg">☒</span> 501 
+Q 591+91  T 682  <span class="ansi-red-intense-fg">☒</span> 668 
+Q 3+591   T 594  <span class="ansi-red-intense-fg">☒</span> 544 
+Q 778+46  T 824  <span class="ansi-red-intense-fg">☒</span> 842 
+Q 812+436 T 1248 <span class="ansi-red-intense-fg">☒</span> 1281
+
+--------------------------------------------------
+Iteration 5
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 14s 308us/step - loss: 1.3372 - acc: 0.5017 - val_loss: 1.2811 - val_acc: 0.5174
+Q 0+39    T 39   <span class="ansi-green-intense-fg">☑</span> 39  
+Q 244+81  T 325  <span class="ansi-red-intense-fg">☒</span> 311 
+Q 25+36   T 61   <span class="ansi-red-intense-fg">☒</span> 67  
+Q 44+402  T 446  <span class="ansi-red-intense-fg">☒</span> 459 
+Q 32+246  T 278  <span class="ansi-red-intense-fg">☒</span> 359 
+Q 728+64  T 792  <span class="ansi-red-intense-fg">☒</span> 719 
+Q 251+6   T 257  <span class="ansi-red-intense-fg">☒</span> 267 
+Q 43+160  T 203  <span class="ansi-red-intense-fg">☒</span> 171 
+Q 981+7   T 988  <span class="ansi-red-intense-fg">☒</span> 989 
+Q 422+20  T 442  <span class="ansi-red-intense-fg">☒</span> 355 
+
+--------------------------------------------------
+Iteration 6
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 14s 302us/step - loss: 1.2101 - acc: 0.5491 - val_loss: 1.1556 - val_acc: 0.5631
+Q 6+708   T 714  <span class="ansi-red-intense-fg">☒</span> 700 
+Q 715+853 T 1568 <span class="ansi-red-intense-fg">☒</span> 1522
+Q 20+150  T 170  <span class="ansi-red-intense-fg">☒</span> 151 
+Q 15+930  T 945  <span class="ansi-red-intense-fg">☒</span> 954 
+Q 714+81  T 795  <span class="ansi-red-intense-fg">☒</span> 883 
+Q 215+22  T 237  <span class="ansi-red-intense-fg">☒</span> 236 
+Q 409+55  T 464  <span class="ansi-red-intense-fg">☒</span> 590 
+Q 530+8   T 538  <span class="ansi-red-intense-fg">☒</span> 531 
+Q 50+859  T 909  <span class="ansi-red-intense-fg">☒</span> 903 
+Q 173+14  T 187  <span class="ansi-red-intense-fg">☒</span> 171 
+
+--------------------------------------------------
+Iteration 7
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 14s 302us/step - loss: 1.1048 - acc: 0.5854 - val_loss: 1.0555 - val_acc: 0.6012
+Q 80+367  T 447  <span class="ansi-red-intense-fg">☒</span> 455 
+Q 44+32   T 76   <span class="ansi-red-intense-fg">☒</span> 77  
+Q 173+14  T 187  <span class="ansi-red-intense-fg">☒</span> 179 
+Q 896+77  T 973  <span class="ansi-red-intense-fg">☒</span> 965 
+Q 9+973   T 982  <span class="ansi-red-intense-fg">☒</span> 994 
+Q 15+930  T 945  <span class="ansi-red-intense-fg">☒</span> 953 
+Q 7+711   T 718  <span class="ansi-red-intense-fg">☒</span> 717 
+Q 737+857 T 1594 <span class="ansi-red-intense-fg">☒</span> 1511
+Q 879+12  T 891  <span class="ansi-green-intense-fg">☑</span> 891 
+Q 99+554  T 653  <span class="ansi-red-intense-fg">☒</span> 644 
+
+--------------------------------------------------
+Iteration 8
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 16s 348us/step - loss: 1.0062 - acc: 0.6214 - val_loss: 0.9526 - val_acc: 0.6395
+Q 890+0   T 890  <span class="ansi-red-intense-fg">☒</span> 899 
+Q 381+53  T 434  <span class="ansi-red-intense-fg">☒</span> 422 
+Q 40+252  T 292  <span class="ansi-red-intense-fg">☒</span> 385 
+Q 275+5   T 280  <span class="ansi-red-intense-fg">☒</span> 271 
+Q 749+38  T 787  <span class="ansi-red-intense-fg">☒</span> 793 
+Q 411+14  T 425  <span class="ansi-red-intense-fg">☒</span> 422 
+Q 32+303  T 335  <span class="ansi-green-intense-fg">☑</span> 335 
+Q 148+77  T 225  <span class="ansi-red-intense-fg">☒</span> 233 
+Q 365+650 T 1015 <span class="ansi-red-intense-fg">☒</span> 1033
+Q 938+330 T 1268 <span class="ansi-red-intense-fg">☒</span> 1263
+
+--------------------------------------------------
+Iteration 9
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 14s 313us/step - loss: 0.8822 - acc: 0.6676 - val_loss: 0.8143 - val_acc: 0.6854
+Q 671+4   T 675  <span class="ansi-red-intense-fg">☒</span> 676 
+Q 41+654  T 695  <span class="ansi-green-intense-fg">☑</span> 695 
+Q 878+84  T 962  <span class="ansi-red-intense-fg">☒</span> 951 
+Q 26+49   T 75   <span class="ansi-red-intense-fg">☒</span> 84  
+Q 521+758 T 1279 <span class="ansi-red-intense-fg">☒</span> 1298
+Q 76+13   T 89   <span class="ansi-red-intense-fg">☒</span> 90  
+Q 9+46    T 55   <span class="ansi-red-intense-fg">☒</span> 54  
+Q 714+154 T 868  <span class="ansi-red-intense-fg">☒</span> 888 
+Q 6+859   T 865  <span class="ansi-green-intense-fg">☑</span> 865 
+Q 82+223  T 305  <span class="ansi-green-intense-fg">☑</span> 305 
+
+--------------------------------------------------
+Iteration 10
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 284us/step - loss: 0.7220 - acc: 0.7314 - val_loss: 0.6501 - val_acc: 0.7580
+Q 1+318   T 319  <span class="ansi-red-intense-fg">☒</span> 329 
+Q 552+613 T 1165 <span class="ansi-red-intense-fg">☒</span> 1164
+Q 288+15  T 303  <span class="ansi-red-intense-fg">☒</span> 312 
+Q 28+869  T 897  <span class="ansi-green-intense-fg">☑</span> 897 
+Q 7+324   T 331  <span class="ansi-red-intense-fg">☒</span> 321 
+Q 449+67  T 516  <span class="ansi-green-intense-fg">☑</span> 516 
+Q 45+73   T 118  <span class="ansi-green-intense-fg">☑</span> 118 
+Q 621+898 T 1519 <span class="ansi-red-intense-fg">☒</span> 1500
+Q 511+894 T 1405 <span class="ansi-red-intense-fg">☒</span> 1424
+Q 432+705 T 1137 <span class="ansi-red-intense-fg">☒</span> 1146
+
+--------------------------------------------------
+Iteration 11
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 294us/step - loss: 0.5766 - acc: 0.7980 - val_loss: 0.5264 - val_acc: 0.8129
+Q 33+418  T 451  <span class="ansi-green-intense-fg">☑</span> 451 
+Q 38+735  T 773  <span class="ansi-green-intense-fg">☑</span> 773 
+Q 732+873 T 1605 <span class="ansi-red-intense-fg">☒</span> 1515
+Q 60+686  T 746  <span class="ansi-red-intense-fg">☒</span> 747 
+Q 87+970  T 1057 <span class="ansi-green-intense-fg">☑</span> 1057
+Q 684+273 T 957  <span class="ansi-red-intense-fg">☒</span> 948 
+Q 311+42  T 353  <span class="ansi-red-intense-fg">☒</span> 343 
+Q 433+83  T 516  <span class="ansi-green-intense-fg">☑</span> 516 
+Q 99+350  T 449  <span class="ansi-red-intense-fg">☒</span> 439 
+Q 9+340   T 349  <span class="ansi-green-intense-fg">☑</span> 349 
+
+--------------------------------------------------
+Iteration 12
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 282us/step - loss: 0.4614 - acc: 0.8521 - val_loss: 0.4159 - val_acc: 0.8711
+Q 91+775  T 866  <span class="ansi-green-intense-fg">☑</span> 866 
+Q 245+17  T 262  <span class="ansi-green-intense-fg">☑</span> 262 
+Q 487+702 T 1189 <span class="ansi-red-intense-fg">☒</span> 1199
+Q 512+310 T 822  <span class="ansi-red-intense-fg">☒</span> 732 
+Q 83+948  T 1031 <span class="ansi-red-intense-fg">☒</span> 1030
+Q 66+125  T 191  <span class="ansi-green-intense-fg">☑</span> 191 
+Q 518+897 T 1415 <span class="ansi-red-intense-fg">☒</span> 1405
+Q 519+44  T 563  <span class="ansi-red-intense-fg">☒</span> 562 
+Q 791+102 T 893  <span class="ansi-red-intense-fg">☒</span> 993 
+Q 595+54  T 649  <span class="ansi-green-intense-fg">☑</span> 649 
+
+--------------------------------------------------
+Iteration 13
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 289us/step - loss: 0.3725 - acc: 0.8909 - val_loss: 0.3489 - val_acc: 0.8960
+Q 281+49  T 330  <span class="ansi-green-intense-fg">☑</span> 330 
+Q 330+25  T 355  <span class="ansi-green-intense-fg">☑</span> 355 
+Q 132+12  T 144  <span class="ansi-green-intense-fg">☑</span> 144 
+Q 647+49  T 696  <span class="ansi-red-intense-fg">☒</span> 796 
+Q 679+22  T 701  <span class="ansi-green-intense-fg">☑</span> 701 
+Q 246+776 T 1022 <span class="ansi-green-intense-fg">☑</span> 1022
+Q 957+624 T 1581 <span class="ansi-green-intense-fg">☑</span> 1581
+Q 23+199  T 222  <span class="ansi-green-intense-fg">☑</span> 222 
+Q 276+57  T 333  <span class="ansi-green-intense-fg">☑</span> 333 
+Q 856+890 T 1746 <span class="ansi-red-intense-fg">☒</span> 1756
+
+--------------------------------------------------
+Iteration 14
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 289us/step - loss: 0.2983 - acc: 0.9191 - val_loss: 0.2699 - val_acc: 0.9271
+Q 36+555  T 591  <span class="ansi-green-intense-fg">☑</span> 591 
+Q 249+727 T 976  <span class="ansi-green-intense-fg">☑</span> 976 
+Q 88+802  T 890  <span class="ansi-red-intense-fg">☒</span> 880 
+Q 861+566 T 1427 <span class="ansi-green-intense-fg">☑</span> 1427
+Q 58+962  T 1020 <span class="ansi-red-intense-fg">☒</span> 1010
+Q 70+574  T 644  <span class="ansi-green-intense-fg">☑</span> 644 
+Q 464+156 T 620  <span class="ansi-red-intense-fg">☒</span> 610 
+Q 99+413  T 512  <span class="ansi-red-intense-fg">☒</span> 511 
+Q 83+4    T 87   <span class="ansi-green-intense-fg">☑</span> 87  
+Q 341+939 T 1280 <span class="ansi-green-intense-fg">☑</span> 1280
+
+--------------------------------------------------
+Iteration 15
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 290us/step - loss: 0.2431 - acc: 0.9362 - val_loss: 0.2564 - val_acc: 0.9266
+Q 10+928  T 938  <span class="ansi-red-intense-fg">☒</span> 939 
+Q 93+311  T 404  <span class="ansi-red-intense-fg">☒</span> 304 
+Q 892+6   T 898  <span class="ansi-green-intense-fg">☑</span> 898 
+Q 187+147 T 334  <span class="ansi-red-intense-fg">☒</span> 324 
+Q 3+196   T 199  <span class="ansi-green-intense-fg">☑</span> 199 
+Q 916+523 T 1439 <span class="ansi-green-intense-fg">☑</span> 1439
+Q 18+136  T 154  <span class="ansi-green-intense-fg">☑</span> 154 
+Q 86+508  T 594  <span class="ansi-green-intense-fg">☑</span> 594 
+Q 26+40   T 66   <span class="ansi-green-intense-fg">☑</span> 66  
+Q 31+56   T 87   <span class="ansi-green-intense-fg">☑</span> 87  
+
+--------------------------------------------------
+Iteration 16
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 281us/step - loss: 0.2000 - acc: 0.9491 - val_loss: 0.2156 - val_acc: 0.9362
+Q 12+885  T 897  <span class="ansi-green-intense-fg">☑</span> 897 
+Q 886+9   T 895  <span class="ansi-green-intense-fg">☑</span> 895 
+Q 6+745   T 751  <span class="ansi-green-intense-fg">☑</span> 751 
+Q 35+988  T 1023 <span class="ansi-green-intense-fg">☑</span> 1023
+Q 811+70  T 881  <span class="ansi-green-intense-fg">☑</span> 881 
+Q 13+138  T 151  <span class="ansi-green-intense-fg">☑</span> 151 
+Q 78+51   T 129  <span class="ansi-green-intense-fg">☑</span> 129 
+Q 65+317  T 382  <span class="ansi-green-intense-fg">☑</span> 382 
+Q 79+128  T 207  <span class="ansi-green-intense-fg">☑</span> 207 
+Q 922+63  T 985  <span class="ansi-green-intense-fg">☑</span> 985 
+
+--------------------------------------------------
+Iteration 17
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 14s 312us/step - loss: 0.1673 - acc: 0.9584 - val_loss: 0.1549 - val_acc: 0.9609
+Q 833+15  T 848  <span class="ansi-green-intense-fg">☑</span> 848 
+Q 158+250 T 408  <span class="ansi-red-intense-fg">☒</span> 308 
+Q 680+9   T 689  <span class="ansi-green-intense-fg">☑</span> 689 
+Q 491+51  T 542  <span class="ansi-green-intense-fg">☑</span> 542 
+Q 22+177  T 199  <span class="ansi-green-intense-fg">☑</span> 199 
+Q 10+856  T 866  <span class="ansi-green-intense-fg">☑</span> 866 
+Q 64+70   T 134  <span class="ansi-green-intense-fg">☑</span> 134 
+Q 719+31  T 750  <span class="ansi-green-intense-fg">☑</span> 750 
+Q 5+825   T 830  <span class="ansi-green-intense-fg">☑</span> 830 
+Q 6+565   T 571  <span class="ansi-green-intense-fg">☑</span> 571 
+
+--------------------------------------------------
+Iteration 18
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 286us/step - loss: 0.1364 - acc: 0.9678 - val_loss: 0.1475 - val_acc: 0.9573
+Q 869+195 T 1064 <span class="ansi-green-intense-fg">☑</span> 1064
+Q 5+92    T 97   <span class="ansi-green-intense-fg">☑</span> 97  
+Q 73+186  T 259  <span class="ansi-green-intense-fg">☑</span> 259 
+Q 492+474 T 966  <span class="ansi-green-intense-fg">☑</span> 966 
+Q 70+504  T 574  <span class="ansi-red-intense-fg">☒</span> 564 
+Q 635+107 T 742  <span class="ansi-green-intense-fg">☑</span> 742 
+Q 881+259 T 1140 <span class="ansi-red-intense-fg">☒</span> 1130
+Q 616+94  T 710  <span class="ansi-red-intense-fg">☒</span> 700 
+Q 321+34  T 355  <span class="ansi-green-intense-fg">☑</span> 355 
+Q 327+971 T 1298 <span class="ansi-red-intense-fg">☒</span> 1398
+
+--------------------------------------------------
+Iteration 19
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 14s 305us/step - loss: 0.1199 - acc: 0.9709 - val_loss: 0.1426 - val_acc: 0.9571
+Q 911+73  T 984  <span class="ansi-green-intense-fg">☑</span> 984 
+Q 321+284 T 605  <span class="ansi-green-intense-fg">☑</span> 605 
+Q 764+82  T 846  <span class="ansi-green-intense-fg">☑</span> 846 
+Q 844+287 T 1131 <span class="ansi-green-intense-fg">☑</span> 1131
+Q 26+500  T 526  <span class="ansi-green-intense-fg">☑</span> 526 
+Q 40+373  T 413  <span class="ansi-green-intense-fg">☑</span> 413 
+Q 658+6   T 664  <span class="ansi-green-intense-fg">☑</span> 664 
+Q 49+62   T 111  <span class="ansi-green-intense-fg">☑</span> 111 
+Q 72+624  T 696  <span class="ansi-green-intense-fg">☑</span> 696 
+Q 679+604 T 1283 <span class="ansi-green-intense-fg">☑</span> 1283
+
+--------------------------------------------------
+Iteration 20
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 12s 272us/step - loss: 0.1022 - acc: 0.9759 - val_loss: 0.1189 - val_acc: 0.9647
+Q 652+803 T 1455 <span class="ansi-green-intense-fg">☑</span> 1455
+Q 11+609  T 620  <span class="ansi-green-intense-fg">☑</span> 620 
+Q 166+689 T 855  <span class="ansi-green-intense-fg">☑</span> 855 
+Q 755+632 T 1387 <span class="ansi-green-intense-fg">☑</span> 1387
+Q 752+94  T 846  <span class="ansi-green-intense-fg">☑</span> 846 
+Q 746+67  T 813  <span class="ansi-green-intense-fg">☑</span> 813 
+Q 123+80  T 203  <span class="ansi-green-intense-fg">☑</span> 203 
+Q 5+69    T 74   <span class="ansi-green-intense-fg">☑</span> 74  
+Q 1+991   T 992  <span class="ansi-green-intense-fg">☑</span> 992 
+Q 377+936 T 1313 <span class="ansi-green-intense-fg">☑</span> 1313
+
+--------------------------------------------------
+Iteration 21
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+45000/45000 [==============================] - 13s 290us/step - loss: 0.0941 - acc: 0.9775 - val_loss: 0.1213 - val_acc: 0.9607
+Q 99+618  T 717  <span class="ansi-green-intense-fg">☑</span> 717 
+Q 9+923   T 932  <span class="ansi-green-intense-fg">☑</span> 932 
+Q 373+72  T 445  <span class="ansi-green-intense-fg">☑</span> 445 
+Q 446+65  T 511  <span class="ansi-green-intense-fg">☑</span> 511 
+Q 61+944  T 1005 <span class="ansi-green-intense-fg">☑</span> 1005
+Q 39+724  T 763  <span class="ansi-green-intense-fg">☑</span> 763 
+Q 9+548   T 557  <span class="ansi-green-intense-fg">☑</span> 557 
+Q 647+97  T 744  <span class="ansi-green-intense-fg">☑</span> 744 
+Q 292+558 T 850  <span class="ansi-green-intense-fg">☑</span> 850 
+Q 340+927 T 1267 <span class="ansi-green-intense-fg">☑</span> 1267
+
+--------------------------------------------------
+Iteration 22
+Train on 45000 samples, validate on 5000 samples
+Epoch 1/1
+ 6400/45000 [===&gt;..........................] - ETA: 11s - loss: 0.0928 - acc: 0.9754</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">KeyboardInterrupt</span>                         Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-14-041379bd66da&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">     36</span>               batch_size<span class="ansi-blue-fg">=</span>BATCH_SIZE<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     37</span>               epochs<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">---&gt; 38</span><span class="ansi-red-fg">               validation_data=(x_val, y_val))
+</span><span class="ansi-green-intense-fg ansi-bold">     39</span>     <span class="ansi-red-fg"># Select 10 samples from the validation set at random so we can visualize</span>
+<span class="ansi-green-intense-fg ansi-bold">     40</span>     <span class="ansi-red-fg"># errors.</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/models.py</span> in <span class="ansi-cyan-fg">fit</span><span class="ansi-blue-fg">(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    958</span>                               initial_epoch<span class="ansi-blue-fg">=</span>initial_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    959</span>                               steps_per_epoch<span class="ansi-blue-fg">=</span>steps_per_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">--&gt; 960</span><span class="ansi-red-fg">                               validation_steps=validation_steps)
+</span><span class="ansi-green-intense-fg ansi-bold">    961</span> 
+<span class="ansi-green-intense-fg ansi-bold">    962</span>     def evaluate(self, x, y, batch_size=32, verbose=1,
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">fit</span><span class="ansi-blue-fg">(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1655</span>                               initial_epoch<span class="ansi-blue-fg">=</span>initial_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">   1656</span>                               steps_per_epoch<span class="ansi-blue-fg">=</span>steps_per_epoch<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1657</span><span class="ansi-red-fg">                               validation_steps=validation_steps)
+</span><span class="ansi-green-intense-fg ansi-bold">   1658</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1659</span>     def evaluate(self, x=None, y=None,
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/engine/training.py</span> in <span class="ansi-cyan-fg">_fit_loop</span><span class="ansi-blue-fg">(self, f, ins, out_labels, batch_size, epochs, verbose, callbacks, val_f, val_ins, shuffle, callback_metrics, initial_epoch, steps_per_epoch, validation_steps)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1211</span>                     batch_logs<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#39;size&#39;</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> len<span class="ansi-blue-fg">(</span>batch_ids<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1212</span>                     callbacks<span class="ansi-blue-fg">.</span>on_batch_begin<span class="ansi-blue-fg">(</span>batch_index<span class="ansi-blue-fg">,</span> batch_logs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">-&gt; 1213</span><span class="ansi-red-fg">                     </span>outs <span class="ansi-blue-fg">=</span> f<span class="ansi-blue-fg">(</span>ins_batch<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1214</span>                     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> isinstance<span class="ansi-blue-fg">(</span>outs<span class="ansi-blue-fg">,</span> list<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1215</span>                         outs <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span>outs<span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py</span> in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, inputs)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2355</span>         session <span class="ansi-blue-fg">=</span> get_session<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2356</span>         updated = session.run(fetches=fetches, feed_dict=feed_dict,
+<span class="ansi-green-fg">-&gt; 2357</span><span class="ansi-red-fg">                               **self.session_kwargs)
+</span><span class="ansi-green-intense-fg ansi-bold">   2358</span>         <span class="ansi-green-fg">return</span> updated<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span>len<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>outputs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">]</span>
+<span class="ansi-green-intense-fg ansi-bold">   2359</span> 
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">run</span><span class="ansi-blue-fg">(self, fetches, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">    887</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    888</span>       result = self._run(None, fetches, feed_dict, options_ptr,
+<span class="ansi-green-fg">--&gt; 889</span><span class="ansi-red-fg">                          run_metadata_ptr)
+</span><span class="ansi-green-intense-fg ansi-bold">    890</span>       <span class="ansi-green-fg">if</span> run_metadata<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    891</span>         proto_data <span class="ansi-blue-fg">=</span> tf_session<span class="ansi-blue-fg">.</span>TF_GetBuffer<span class="ansi-blue-fg">(</span>run_metadata_ptr<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_run</span><span class="ansi-blue-fg">(self, handle, fetches, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1118</span>     <span class="ansi-green-fg">if</span> final_fetches <span class="ansi-green-fg">or</span> final_targets <span class="ansi-green-fg">or</span> <span class="ansi-blue-fg">(</span>handle <span class="ansi-green-fg">and</span> feed_dict_tensor<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1119</span>       results = self._do_run(handle, final_targets, final_fetches,
+<span class="ansi-green-fg">-&gt; 1120</span><span class="ansi-red-fg">                              feed_dict_tensor, options, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1121</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1122</span>       results <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_do_run</span><span class="ansi-blue-fg">(self, handle, target_list, fetch_list, feed_dict, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1315</span>     <span class="ansi-green-fg">if</span> handle <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1316</span>       return self._do_call(_run_fn, self._session, feeds, fetches, targets,
+<span class="ansi-green-fg">-&gt; 1317</span><span class="ansi-red-fg">                            options, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1318</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1319</span>       <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_do_call<span class="ansi-blue-fg">(</span>_prun_fn<span class="ansi-blue-fg">,</span> self<span class="ansi-blue-fg">.</span>_session<span class="ansi-blue-fg">,</span> handle<span class="ansi-blue-fg">,</span> feeds<span class="ansi-blue-fg">,</span> fetches<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_do_call</span><span class="ansi-blue-fg">(self, fn, *args)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1321</span>   <span class="ansi-green-fg">def</span> _do_call<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> fn<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1322</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1323</span><span class="ansi-red-fg">       </span><span class="ansi-green-fg">return</span> fn<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1324</span>     <span class="ansi-green-fg">except</span> errors<span class="ansi-blue-fg">.</span>OpError <span class="ansi-green-fg">as</span> e<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1325</span>       message <span class="ansi-blue-fg">=</span> compat<span class="ansi-blue-fg">.</span>as_text<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">.</span>message<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py</span> in <span class="ansi-cyan-fg">_run_fn</span><span class="ansi-blue-fg">(session, feed_dict, fetch_list, target_list, options, run_metadata)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1300</span>           return tf_session.TF_Run(session, options,
+<span class="ansi-green-intense-fg ansi-bold">   1301</span>                                    feed_dict<span class="ansi-blue-fg">,</span> fetch_list<span class="ansi-blue-fg">,</span> target_list<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-fg">-&gt; 1302</span><span class="ansi-red-fg">                                    status, run_metadata)
+</span><span class="ansi-green-intense-fg ansi-bold">   1303</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1304</span>     <span class="ansi-green-fg">def</span> _prun_fn<span class="ansi-blue-fg">(</span>session<span class="ansi-blue-fg">,</span> handle<span class="ansi-blue-fg">,</span> feed_dict<span class="ansi-blue-fg">,</span> fetch_list<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">KeyboardInterrupt</span>: </pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>

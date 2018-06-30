@@ -1,0 +1,564 @@
+<html>
+				<head>
+				<meta charset="utf-8">
+			    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+			    <meta name="viewport" content="width=device-width, initial-scale=1">
+			    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+			    <meta name="description" content="">
+			    <meta name="author" content="">
+			    <title>Non-negative matrix factorization with missing entries using CVXPY</title>
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+			      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            displayMath: [ ["$$",'$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+</head>
+			    <body>
+<nav class="navbar navbar-default">
+    <div class="container text-center">
+
+        <div id="navbar" class="navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="../../index.html">Home</a></li>
+                <li><a href="../../publications.html">Publications</a></li>
+                <li><a href="../index.html">Blog</a></li>
+                <li><a href="../../files/cv.pdf">CV</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+			    <div class="container" margin="5%">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Non-negative-matrix-factorization-with-missing-entries-using-CVXPY">Non-negative matrix factorization with missing entries using CVXPY<a class="anchor-link" href="#Non-negative-matrix-factorization-with-missing-entries-using-CVXPY">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Like my <a href="https://nipunbatra.github.io/blog/2017/nmf-nnls.html">previous</a> <a href="https://nipunbatra.github.io/blog/2017/nnmf-tensorflow.html">few</a> <a href="https://nipunbatra.github.io/blog/2017/nmf-autograd.html">posts</a>, in this post I'll illustrate solving non-negative matrix factorization. I'll borrow an <a href="http://nbviewer.jupyter.org/github/cvxgrp/cvxpy/blob/master/examples/notebooks/WWW/nonneg_matrix_fact.ipynb">example</a> provided by <a href="http://www.cvxpy.org/en/latest/">CVXPY</a> and modify it in three ways:</p>
+<ol>
+<li>allowing missing entries</li>
+<li>modifying the cost function</li>
+<li>add regularisation</li>
+</ol>
+<p>This CVXPY implementation uses alternating least squares based method to compute the decomposed matrices.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Imports">Imports<a class="anchor-link" href="#Imports">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">cvxpy</span> <span class="kn">as</span> <span class="nn">cvx</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Creating-matrix-to-be-decomposed">Creating matrix to be decomposed<a class="anchor-link" href="#Creating-matrix-to-be-decomposed">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Masking-one-entry">Masking one entry<a class="anchor-link" href="#Masking-one-entry">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span>
+<span class="n">A</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[3]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[ nan,   4.,   5.],
+       [  4.,   4.,   5.],
+       [  5.,   3.,   4.],
+       [  2.,   3.,   3.]], dtype=float32)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Unlike previous posts, I'll directly provide the source code in one go and have comments in the code. We will create two cost functions:</p>
+<ol>
+<li>minimise the absolute error between the given matrix and the product of the decomposed matrix</li>
+<li>minimise the relative error between the given matrix and the product of the decomposed matrix</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">nmf_features</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">constant</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">regularisation</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">MAX_ITERS</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="s1">&#39;absolute&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A: matrix to be decomposed (m rows and n columns)</span>
+<span class="sd">    k: number of latent factors</span>
+<span class="sd">    constant: coefficient of regularisation</span>
+<span class="sd">    regularisation: whether to use regularisation</span>
+<span class="sd">    MAX_ITERS: maximium number of iterations</span>
+<span class="sd">    cost: &#39;absolute&#39; or &#39;relative&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    W:</span>
+<span class="sd">    H:</span>
+<span class="sd">    Residual</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    
+    <span class="c1"># Initialize W randomly.</span>
+    <span class="n">W_init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">W_init</span>
+
+    <span class="c1"># Perform alternating minimization.</span>
+
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">MAX_ITERS</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">iter_num</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">MAX_ITERS</span><span class="p">):</span>
+        <span class="c1"># For odd iterations, treat W constant, optimize over H.</span>
+        <span class="k">if</span> <span class="n">iter_num</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">constraint</span> <span class="o">=</span> <span class="p">[</span><span class="n">H</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+            
+        <span class="c1"># For even iterations, treat X constant, optimize over Y.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+            <span class="n">constraint</span> <span class="o">=</span> <span class="p">[</span><span class="n">W</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+           
+        <span class="n">Temp</span> <span class="o">=</span> <span class="n">W</span><span class="o">*</span><span class="n">H</span>
+        
+        <span class="n">one_A</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">+</span><span class="mf">1e-3</span><span class="p">))</span>
+        <span class="n">abs_error</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">W</span> <span class="o">*</span> <span class="n">H</span><span class="p">)[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">rel_error</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">mul_elemwise</span><span class="p">(</span><span class="n">one_A</span><span class="p">,</span> <span class="n">abs_error</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cost</span><span class="o">==</span><span class="s1">&#39;absolute&#39;</span><span class="p">:</span>
+            <span class="n">error</span><span class="o">=</span><span class="n">abs_error</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If relative cost, </span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">rel_error</span>
+            
+        <span class="c1"># Solve the problem.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">regularisation</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">cvx</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s1">&#39;fro&#39;</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">iter_num</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">cvx</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s1">&#39;fro&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">constant</span> <span class="o">*</span> <span class="n">cvx</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">H</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">cvx</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s1">&#39;fro&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">constant</span> <span class="o">*</span> <span class="n">cvx</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">W</span><span class="p">))</span>
+
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)</span>
+        <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cvx</span><span class="o">.</span><span class="n">SCS</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">prob</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">cvx</span><span class="o">.</span><span class="n">OPTIMAL</span><span class="p">:</span>
+            <span class="k">pass</span>
+       
+        <span class="n">residual</span><span class="p">[</span><span class="n">iter_num</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">prob</span><span class="o">.</span><span class="n">value</span>
+        <span class="c1"># Convert variable to NumPy array constant for next iteration.</span>
+        <span class="k">if</span> <span class="n">iter_num</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">return</span> <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">residual</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Testing-out-implementation-over-different-parameters">Testing out implementation over different parameters<a class="anchor-link" href="#Testing-out-implementation-over-different-parameters">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">cost</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;absolute&#39;</span><span class="p">,</span><span class="s1">&#39;relative&#39;</span><span class="p">]:</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">cost</span><span class="p">]</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">regularisation</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">]:</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">cost</span><span class="p">][</span><span class="n">regularisation</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">constant</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">]:</span>
+            <span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">residual</span> <span class="o">=</span> <span class="n">nmf_features</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span> <span class="n">regularisation</span><span class="o">=</span><span class="n">regularisation</span><span class="p">,</span> <span class="n">constant</span><span class="o">=</span><span class="n">constant</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">cost</span><span class="p">][</span><span class="n">regularisation</span><span class="p">][</span><span class="n">constant</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;W&#39;</span><span class="p">:</span><span class="n">W</span><span class="p">,</span><span class="s1">&#39;H&#39;</span><span class="p">:</span><span class="n">H</span><span class="p">,</span> <span class="s1">&#39;residual&#39;</span><span class="p">:</span><span class="n">residual</span><span class="p">,</span> <span class="s1">&#39;pred&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">))}</span>
+            
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Using-relative-cost">Using relative cost<a class="anchor-link" href="#Using-relative-cost">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;relative&#39;</span><span class="p">][</span><span class="bp">False</span><span class="p">][</span><span class="mf">0.1</span><span class="p">][</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[6]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>matrix([[ 5.,  4.,  5.],
+        [ 4.,  4.,  5.],
+        [ 5.,  3.,  4.],
+        [ 2.,  3.,  3.]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Great, looks like we recovered the original matrix pretty much as it is!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Using-absolute-cost">Using absolute cost<a class="anchor-link" href="#Using-absolute-cost">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;absolute&#39;</span><span class="p">][</span><span class="bp">False</span><span class="p">][</span><span class="mf">0.1</span><span class="p">][</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[7]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>matrix([[ 5.,  4.,  5.],
+        [ 4.,  4.,  5.],
+        [ 5.,  3.,  4.],
+        [ 2.,  3.,  3.]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Again, looks like we recovered the original matrix pretty much as it is!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Using-regularisation">Using regularisation<a class="anchor-link" href="#Using-regularisation">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;absolute&#39;</span><span class="p">][</span><span class="bp">True</span><span class="p">][</span><span class="mi">10</span><span class="p">][</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[8]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>matrix([[ 0.,  0.,  0.],
+        [ 0.,  0.,  0.],
+        [ 0.,  0.,  0.],
+        [ 0.,  0.,  0.]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Woah. All 0s. Maybe this is due to the high coefficient of regularisation!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;absolute&#39;</span><span class="p">][</span><span class="bp">True</span><span class="p">][</span><span class="mi">10</span><span class="p">][</span><span class="s1">&#39;H&#39;</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[9]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>matrix([[ 0.,  0.,  0.],
+        [ 0.,  0.,  0.]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Yes, this is indeed the case!</p>
+
+</div>
+</div>
+</div>
+ 
+
+</div><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96903131-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<div class="container">
+<div id="share" class="navbar-static-bottom"></div>
+
+
+    <script>
+        $("#share").jsSocials({
+            shares: ["email", "twitter", "facebook", "googleplus", "linkedin", "pinterest", "stumbleupon", "whatsapp"]
+        });
+    </script>
+
+<div id="disqus_thread"></div>
+
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://nipunbatra-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                                
+    
+
+<link rel="stylesheet" href="../../assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="../../assets/css/nipun-custom.css" />
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css" />
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-flat.css" />
+<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+
+</body></html>
